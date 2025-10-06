@@ -37,9 +37,12 @@ import {
   Sun,
   Monitor,
   Brain,
+  Camera,
+  Scan,
 } from "lucide-react";
 import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
+import { BillScanner } from './components/scanning/BillScanner'
 import { FinancialData } from './lib/ai/deepseek'
 
 // --- Utilities ---
@@ -119,6 +122,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [showAICategorizer, setShowAICategorizer] = useState(false);
+  const [showBillScanner, setShowBillScanner] = useState(false);
   const [categorizerData, setCategorizerData] = useState({ description: '', amount: 0 });
   
   // Core data
@@ -321,6 +325,20 @@ export default function App() {
     setShowAICategorizer(false);
   };
 
+  const handleBillScanComplete = (scannedData) => {
+    // Pre-fill the form with scanned data
+    setDraft(prev => ({
+      ...prev,
+      amount: scannedData.amount ? String(scannedData.amount) : prev.amount,
+      label: scannedData.merchant || prev.label,
+      category: scannedData.category || prev.category,
+      date: scannedData.date || prev.date,
+      type: "expense" // Scanned bills are typically expenses
+    }));
+    setShowBillScanner(false);
+    setShowAdd(true);
+  };
+
   // --- UI Components ---
   const TopBar = ({ title }) => (
     <div className={`sticky top-0 z-10 ${BG} ${CARD} px-4 py-3 mb-3 flex items-center justify-between`}>
@@ -408,9 +426,18 @@ export default function App() {
         <div className={`${CARD} p-4`}>
           <div className="flex items-center justify-between mb-2">
             <div className={`text-sm ${textSub}`}>Recent Transactions</div>
-            <button className={`${BTN} text-xs bg-muted ${textLight}`} onClick={() => setShowAdd(true)}>
-              <Plus size={16} /> New
-            </button>
+            <div className="flex space-x-2">
+              <button 
+                className={`${BTN} text-xs bg-blue-600 text-white`} 
+                onClick={() => setShowBillScanner(true)}
+                title="Scan Bill/Receipt"
+              >
+                <Camera size={16} /> Scan
+              </button>
+              <button className={`${BTN} text-xs bg-muted ${textLight}`} onClick={() => setShowAdd(true)}>
+                <Plus size={16} /> New
+              </button>
+            </div>
           </div>
           <div className="divide-y divide-border">
             {tx.length === 0 && <div className={`text-sm ${textSub}`}>No transactions yet.</div>}
@@ -477,6 +504,13 @@ export default function App() {
             <h3 className={`font-semibold ${textLight}`}>
               {draft.id ? "Edit Transaction" : "Add Transaction"}
             </h3>
+            <button
+              onClick={() => setShowBillScanner(true)}
+              className="ml-auto p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+              title="Scan Bill/Receipt"
+            >
+              <Camera size={16} />
+            </button>
           </div>
 
           <div className="space-y-3">
@@ -594,6 +628,13 @@ export default function App() {
           amount={categorizerData.amount}
           onCategorySelected={handleCategorySelected}
           onClose={() => setShowAICategorizer(false)}
+        />
+      )}
+
+      {showBillScanner && (
+        <BillScanner
+          onScanComplete={handleBillScanComplete}
+          onClose={() => setShowBillScanner(false)}
         />
       )}
     </div>

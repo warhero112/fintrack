@@ -42,7 +42,6 @@ import {
 } from "lucide-react";
 import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
-import { Sidebar } from './components/Sidebar'
 import { BillScanner } from './components/scanning/BillScanner'
 import { FinancialData } from './lib/ai/deepseek'
 
@@ -632,13 +631,6 @@ export default function App() {
         />
       )}
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        settings={settings}
-        onSettingsChange={setSettings}
-      />
-      
       {showBillScanner && (
         <BillScanner
           onScanComplete={handleBillScanComplete}

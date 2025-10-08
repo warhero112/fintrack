@@ -42,7 +42,6 @@ import {
 } from "lucide-react";
 import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
-import { Sidebar } from './components/Sidebar'
 import { BillScanner } from './components/scanning/BillScanner'
 import { FinancialData } from './lib/ai/deepseek'
 
@@ -125,10 +124,6 @@ export default function App() {
   const [showAICategorizer, setShowAICategorizer] = useState(false);
   const [showBillScanner, setShowBillScanner] = useState(false);
   const [categorizerData, setCategorizerData] = useState({ description: '', amount: 0 });
-  
-  // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   
   // Core data
   const [accounts, setAccounts] = useState(() => load("fintrack.accounts", DEFAULT_ACCOUNTS));
@@ -636,16 +631,6 @@ export default function App() {
         />
       )}
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        settings={settings}
-        onSettingsChange={setSettings}
-        isAuthenticated={isAuthenticated}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-      />
-      
       {showBillScanner && (
         <BillScanner
           onScanComplete={handleBillScanComplete}

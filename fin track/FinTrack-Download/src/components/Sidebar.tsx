@@ -1,14 +1,32 @@
-import React from 'react'
-import { X, Settings, User, Wallet, PieChart, Moon, Sun, Monitor, Globe, DollarSign } from 'lucide-react'
+import React, { useState } from 'react'
+import { X, Settings, User, Wallet, PieChart, Moon, Sun, Monitor, Globe, DollarSign, LogIn, LogOut, Mail, Lock } from 'lucide-react'
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
   settings: any
   onSettingsChange: (settings: any) => void
+  isAuthenticated?: boolean
+  onLogin?: () => void
+  onLogout?: () => void
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, settings, onSettingsChange }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  isOpen, 
+  onClose, 
+  settings, 
+  onSettingsChange, 
+  isAuthenticated = false,
+  onLogin,
+  onLogout 
+}) => {
+  const [showLoginForm, setShowLoginForm] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'si', name: 'සිංහල', flag: '🇱🇰' },
@@ -36,6 +54,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, settings, onS
     { value: 'system', label: 'System', icon: Monitor },
   ]
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoggingIn(true)
+    setLoginError('')
+
+    try {
+      // Simulate login - replace with actual auth logic
+      if (email && password) {
+        // For now, just close the form and call onLogin
+        setShowLoginForm(false)
+        onLogin?.()
+        setEmail('')
+        setPassword('')
+      } else {
+        setLoginError('Please enter both email and password')
+      }
+    } catch (error) {
+      setLoginError('Login failed. Please try again.')
+    } finally {
+      setIsLoggingIn(false)
+    }
+  }
+
+  const handleLogout = () => {
+    onLogout?.()
+    onClose()
+  }
+
   if (!isOpen) return null
 
   return (
@@ -54,11 +100,112 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, settings, onS
         </div>
 
         <div className="p-4 space-y-6 overflow-y-auto h-full pb-20">
-          {/* User Profile */}
+          {/* Authentication Section */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <User size={16} />
-              Profile
+              Account
+            </h3>
+            
+            {!isAuthenticated ? (
+              <div className="space-y-3">
+                {!showLoginForm ? (
+                  <button
+                    onClick={() => setShowLoginForm(true)}
+                    className="w-full flex items-center gap-2 p-3 rounded-xl border border-primary bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <LogIn size={16} />
+                    <span>Login with Email</span>
+                  </button>
+                ) : (
+                  <form onSubmit={handleLogin} className="space-y-3 p-3 border rounded-xl bg-muted/50">
+                    <div>
+                      <label className="block text-sm text-muted-foreground mb-1">Email</label>
+                      <div className="relative">
+                        <Mail size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full pl-10 pr-3 py-2 border rounded-lg bg-input-background"
+                          placeholder="Enter your email"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm text-muted-foreground mb-1">Password</label>
+                      <div className="relative">
+                        <Lock size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full pl-10 pr-10 py-2 border rounded-lg bg-input-background"
+                          placeholder="Enter your password"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        >
+                          {showPassword ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {loginError && (
+                      <div className="text-sm text-red-600 dark:text-red-400">
+                        {loginError}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={isLoggingIn}
+                        className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-lg font-medium disabled:opacity-50"
+                      >
+                        {isLoggingIn ? 'Logging in...' : 'Login'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginForm(false)}
+                        className="px-3 py-2 text-muted-foreground hover:text-foreground"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                  <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                    <User size={16} />
+                    <span className="font-medium">Logged in as: {settings.name || 'User'}</span>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 p-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* User Profile */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Settings size={16} />
+              Profile Settings
             </h3>
             <div className="space-y-2">
               <label className="block text-sm text-muted-foreground">Name</label>

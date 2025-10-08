@@ -126,6 +126,10 @@ export default function App() {
   const [showBillScanner, setShowBillScanner] = useState(false);
   const [categorizerData, setCategorizerData] = useState({ description: '', amount: 0 });
   
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  
   // Core data
   const [accounts, setAccounts] = useState(() => load("fintrack.accounts", DEFAULT_ACCOUNTS));
   const [tx, setTx] = useState(() => load("fintrack.tx", DEFAULT_TX));
@@ -637,6 +641,9 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
         settings={settings}
         onSettingsChange={setSettings}
+        isAuthenticated={isAuthenticated}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
       />
       
       {showBillScanner && (

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, PieChart as PieIcon, Plus, Wallet, Brain, User } from 'lucide-react'
+import { Home, Trophy, BarChart3, Plus, Brain, Settings } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 
 export const BottomNavigation: React.FC = () => {
@@ -7,15 +7,14 @@ export const BottomNavigation: React.FC = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', index: 0 },
-    { icon: PieIcon, label: 'Stats', index: 1 },
-    { icon: Plus, label: 'Add', index: 2, isAction: true },
-    { icon: Wallet, label: 'Wallets', index: 3 },
-    { icon: Brain, label: 'AI', index: 5 },
-    { icon: User, label: 'Profile', index: 4 },
+    { icon: Trophy, label: 'Goals', index: 6 },
+    { icon: BarChart3, label: 'Insights', index: 1 },
+    { icon: Brain, label: 'AI Advisor', index: 5 },
+    { icon: Settings, label: 'Settings', index: 4 },
   ]
 
   const handleNavClick = (item: typeof navItems[0]) => {
-    if (item.isAction) {
+    if (item.index === 2) { // Add button
       setShowAdd(true)
     } else {
       setTab(item.index)
@@ -23,8 +22,19 @@ export const BottomNavigation: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-border">
-      <div className="mx-auto max-w-md grid grid-cols-6 py-2">
+    <div className="sticky bottom-0 w-full bg-white pb-3 pt-2">
+      {/* Add Transaction Button */}
+      <div className="px-4">
+        <button 
+          onClick={() => setShowAdd(true)}
+          className="flex h-12 w-full flex-col items-center justify-center rounded-xl bg-[#111418] text-white"
+        >
+          <p className="text-base font-bold leading-normal tracking-[0.015em]">Add Transaction</p>
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex gap-2 border-t border-[#f0f2f4] bg-white px-4 pb-3 pt-2">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = tab === item.index
@@ -33,27 +43,28 @@ export const BottomNavigation: React.FC = () => {
             <button
               key={item.index}
               onClick={() => handleNavClick(item)}
-              className={`flex flex-col items-center gap-1 py-1 ${
-                isActive ? 'text-primary' : 'text-muted-foreground'
+              className={`just flex flex-1 flex-col items-center justify-end gap-1 ${
+                isActive ? 'text-[#111418]' : 'text-[#617589]'
               }`}
-              aria-label={item.label}
             >
-              <div
-                className={`p-2 rounded-2xl ${
-                  item.isAction
-                    ? 'bg-primary text-primary-foreground'
-                    : isActive
-                    ? 'bg-primary/10'
-                    : 'hover:bg-muted'
-                }`}
-              >
-                <Icon size={20} />
+              <div className={`flex h-8 items-center justify-center ${
+                isActive ? 'text-[#111418]' : 'text-[#617589]'
+              }`}>
+                <Icon 
+                  size={24} 
+                  fill={isActive ? 'currentColor' : 'none'}
+                />
               </div>
-              <div className="text-[11px]">{item.label}</div>
+              <p className={`text-xs font-medium leading-normal tracking-[0.015em] ${
+                isActive ? 'text-[#111418]' : 'text-[#617589]'
+              }`}>
+                {item.label}
+              </p>
             </button>
           )
         })}
       </div>
+      <div className="h-5 bg-white"></div>
     </div>
   )
 }

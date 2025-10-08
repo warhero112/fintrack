@@ -22,19 +22,19 @@ export const BottomNavigation: React.FC = () => {
   }
 
   return (
-    <div className="sticky bottom-0 w-full bg-white pb-3 pt-2">
+    <div className="sticky bottom-0 w-full bg-background pb-3 pt-2">
       {/* Add Transaction Button */}
       <div className="px-4">
         <button 
           onClick={() => setShowAdd(true)}
-          className="flex h-12 w-full flex-col items-center justify-center rounded-xl bg-[#111418] text-white"
+          className="flex h-12 w-full flex-col items-center justify-center rounded-xl bg-primary text-primary-foreground"
         >
           <p className="text-base font-bold leading-normal tracking-[0.015em]">Add Transaction</p>
         </button>
       </div>
 
       {/* Navigation */}
-      <div className="flex gap-2 border-t border-[#f0f2f4] bg-white px-4 pb-3 pt-2">
+      <div className="flex gap-2 border-t border-border bg-background px-4 pb-3 pt-2">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = tab === item.index
@@ -44,11 +44,11 @@ export const BottomNavigation: React.FC = () => {
               key={item.index}
               onClick={() => handleNavClick(item)}
               className={`just flex flex-1 flex-col items-center justify-end gap-1 ${
-                isActive ? 'text-[#111418]' : 'text-[#617589]'
+                isActive ? 'text-foreground' : 'text-muted-foreground'
               }`}
             >
               <div className={`flex h-8 items-center justify-center ${
-                isActive ? 'text-[#111418]' : 'text-[#617589]'
+                isActive ? 'text-foreground' : 'text-muted-foreground'
               }`}>
                 <Icon 
                   size={24} 
@@ -56,7 +56,7 @@ export const BottomNavigation: React.FC = () => {
                 />
               </div>
               <p className={`text-xs font-medium leading-normal tracking-[0.015em] ${
-                isActive ? 'text-[#111418]' : 'text-[#617589]'
+                isActive ? 'text-foreground' : 'text-muted-foreground'
               }`}>
                 {item.label}
               </p>
@@ -64,7 +64,7 @@ export const BottomNavigation: React.FC = () => {
           )
         })}
       </div>
-      <div className="h-5 bg-white"></div>
+      <div className="h-5 bg-background"></div>
     </div>
   )
 }

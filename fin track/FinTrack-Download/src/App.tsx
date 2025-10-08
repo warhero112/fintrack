@@ -12,6 +12,7 @@ import { BottomNavigation } from './components/layout/BottomNavigation'
 import { AddTransactionModal } from './components/modals/AddTransactionModal'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
 import { BillScanner } from './components/scanning/BillScanner'
+import { Sidebar } from './components/Sidebar'
 
 export default function App() {
   const {
@@ -23,7 +24,20 @@ export default function App() {
     setShowAICategorizer,
     setShowBillScanner,
     settings,
+    setSettings,
   } = useAppStore()
+
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleLogin = () => {
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+  }
 
   // Theme handling
   useEffect(() => {
@@ -66,10 +80,20 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-white text-[#111418]" style={{fontFamily: 'Manrope, "Noto Sans", sans-serif'}}>
+      <div className="min-h-screen bg-background text-foreground">
         {renderScreen()}
         
         <BottomNavigation />
+        
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          settings={settings}
+          onSettingsChange={setSettings}
+          isAuthenticated={isAuthenticated}
+          onLogin={handleLogin}
+          onLogout={handleLogout}
+        />
         
         {showAdd && (
           <AddTransactionModal

@@ -12,7 +12,7 @@ interface AddTransactionModalProps {
 }
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ onClose }) => {
-  const { accounts, categories, settings, setShowBillScanner, setShowAICategorizer } = useAppStore()
+  const { accounts, categories, setShowBillScanner, setShowAICategorizer } = useAppStore()
   const { createTransaction } = useTransactions()
   const { handleError, handleSuccess } = useErrorHandler()
   
@@ -152,14 +152,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ onClos
                   className="flex-1 border rounded-xl px-3 py-2 bg-input-background"
                   {...register('category')}
                 >
-                  {watchedValues.type === 'income' 
-                    ? (settings.incomeCategories || categories).map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))
-                    : (settings.expenseCategories || categories).map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))
-                  }
+                  {categories.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
                 <button
                   type="button"

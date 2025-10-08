@@ -42,8 +42,6 @@ import {
 } from "lucide-react";
 import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
-import { Sidebar } from './components/Sidebar'
-import { GoalsScreen } from './components/GoalsScreen'
 import { BillScanner } from './components/scanning/BillScanner'
 import { FinancialData } from './lib/ai/deepseek'
 
@@ -105,8 +103,6 @@ const DEFAULT_SETTINGS = {
   name: "Fin Track User",
   locale: "en",
   language: "English",
-  incomeCategories: ["Salary", "Bonus", "Freelance", "Investment", "Rental", "Other Income"],
-  expenseCategories: ["Food", "Transport", "Shopping", "Bills", "Utilities", "Health", "Entertainment", "Travel", "Education", "Other"],
 };
 
 const DEFAULT_CATEGORIES = [
@@ -122,16 +118,12 @@ const DEFAULT_BUDGETS = [
 
 // --- Main App ---
 export default function App() {
-  const [tab, setTab] = useState(0); // 0 Home, 1 Stats, 2 Add, 3 Wallets, 4 Profile, 5 AI Advisor, 6 Goals
+  const [tab, setTab] = useState(0); // 0 Home, 1 Stats, 2 Add, 3 Wallets, 4 Profile, 5 AI Advisor
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [showAICategorizer, setShowAICategorizer] = useState(false);
   const [showBillScanner, setShowBillScanner] = useState(false);
   const [categorizerData, setCategorizerData] = useState({ description: '', amount: 0 });
-  
-  // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   
   // Core data
   const [accounts, setAccounts] = useState(() => load("fintrack.accounts", DEFAULT_ACCOUNTS));
@@ -373,7 +365,6 @@ export default function App() {
           { i: <Wallet size={20} />, l: "Wallets" },
           { i: <Brain size={20} />, l: "AI" },
           { i: <User size={20} />, l: "Profile" },
-          { i: <Target size={20} />, l: "Goals" },
         ].map((t, idx) => (
           <button
             key={idx}
@@ -627,7 +618,6 @@ export default function App() {
         {tab === 3 && <div className="pb-28"><TopBar title="Wallets" /></div>}
         {tab === 4 && <div className="pb-28"><TopBar title="Profile" /></div>}
         {tab === 5 && <AIAdvisorScreen />}
-        {tab === 6 && <GoalsScreen />}
       </div>
       <AddSheet />
       <BottomNav />
@@ -641,16 +631,6 @@ export default function App() {
         />
       )}
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        settings={settings}
-        onSettingsChange={setSettings}
-        isAuthenticated={isAuthenticated}
-        onLogin={handleLogin}
-        onLogout={handleLogout}
-      />
-      
       {showBillScanner && (
         <BillScanner
           onScanComplete={handleBillScanComplete}

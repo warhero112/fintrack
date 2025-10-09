@@ -1,156 +1,316 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Transaction, Account, Budget, Settings, ScannedData } from '../types'
 
-interface AppStore {
+export interface Transaction {
+  id: string
+  type: 'income' | 'expense'
+  amount: number
+  description: string
+  category: string
+  date: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Goal {
+  id: string
+  title: string
+  description: string
+  targetAmount: number
+  currentAmount: number
+  targetDate: string
+  category: string
+  priority: 'low' | 'medium' | 'high'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Budget {
+  id: string
+  category: string
+  monthlyLimit: number
+  currentSpent: number
+  month: string
+  year: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecurringTransaction {
+  id: string
+  type: 'income' | 'expense'
+  amount: number
+  description: string
+  category: string
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  nextDate: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Category {
+  id: string
+  name: string
+  icon: string
+  color: string
+  type: 'income' | 'expense'
+  isCustom: boolean
+  createdAt: string
+}
+
+export interface Settings {
+  theme: 'light' | 'dark' | 'system'
+  currency: string
+  language: string
+  notifications: boolean
+  autoSync: boolean
+  defaultCategories: boolean
+}
+
+interface AppState {
   // UI State
   tab: number
-  setTab: (tab: number) => void
-  sidebarOpen: boolean
-  setSidebarOpen: (open: boolean) => void
   showAdd: boolean
-  setShowAdd: (show: boolean) => void
   showAICategorizer: boolean
-  setShowAICategorizer: (show: boolean) => void
   showBillScanner: boolean
-  setShowBillScanner: (show: boolean) => void
-  loading: boolean
-  setLoading: (loading: boolean) => void
-  error: string | null
-  setError: (error: string | null) => void
-
-  // Data State
+  sidebarOpen: boolean
+  
+  // Data
   transactions: Transaction[]
-  accounts: Account[]
+  goals: Goal[]
   budgets: Budget[]
+  recurringTransactions: RecurringTransaction[]
+  categories: Category[]
   settings: Settings
-  categories: string[]
-
+  
+  // Filters
+  searchQuery: string
+  filterType: 'all' | 'income' | 'expense'
+  filterDateRange: { start: string; end: string } | null
+  filterCategory: string | null
+  
   // Actions
+  setTab: (tab: number) => void
+  setShowAdd: (show: boolean) => void
+  setShowAICategorizer: (show: boolean) => void
+  setShowBillScanner: (show: boolean) => void
+  setSidebarOpen: (open: boolean) => void
+  
+  // Transaction actions
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateTransaction: (id: string, transaction: Partial<Transaction>) => void
+  updateTransaction: (id: string, updates: Partial<Transaction>) => void
   deleteTransaction: (id: string) => void
-  addAccount: (account: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateAccount: (id: string, account: Partial<Account>) => void
-  deleteAccount: (id: string) => void
+  getTransactions: () => Transaction[]
+  getFilteredTransactions: () => Transaction[]
+  
+  // Goal actions
+  addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateGoal: (id: string, updates: Partial<Goal>) => void
+  deleteGoal: (id: string) => void
+  addToGoal: (id: string, amount: number) => void
+  
+  // Budget actions
   addBudget: (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateBudget: (id: string, budget: Partial<Budget>) => void
+  updateBudget: (id: string, updates: Partial<Budget>) => void
   deleteBudget: (id: string) => void
+  
+  // Recurring transaction actions
+  addRecurringTransaction: (transaction: Omit<RecurringTransaction, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateRecurringTransaction: (id: string, updates: Partial<RecurringTransaction>) => void
+  deleteRecurringTransaction: (id: string) => void
+  processRecurringTransactions: () => void
+  
+  // Category actions
+  addCategory: (category: Omit<Category, 'id' | 'createdAt'>) => void
+  updateCategory: (id: string, updates: Partial<Category>) => void
+  deleteCategory: (id: string) => void
+  
+  // Settings actions
   updateSettings: (settings: Partial<Settings>) => void
-  addCategory: (category: string) => void
-  removeCategory: (category: string) => void
-
-  // Computed values
-  getTotals: () => { income: number; expenses: number; balance: number }
-  getTransactionsByCategory: () => Record<string, number>
-  getMonthlySeries: () => Array<{ day: string; income: number; expense: number }>
+  
+  // Filter actions
+  setSearchQuery: (query: string) => void
+  setFilterType: (type: 'all' | 'income' | 'expense') => void
+  setFilterDateRange: (range: { start: string; end: string } | null) => void
+  setFilterCategory: (category: string | null) => void
+  clearFilters: () => void
+  
+  // Export actions
+  exportToCSV: () => string
+  exportToJSON: () => string
+  importFromCSV: (csvData: string) => void
+  importFromJSON: (jsonData: string) => void
 }
 
-const defaultSettings: Settings = {
-  currency: 'USD',
-  theme: 'system',
-  name: 'FinTrack User',
-  locale: 'en',
-  language: 'English',
-  notifications: true,
-  autoSync: true,
-}
-
-const defaultCategories = [
-  'Food', 'Transport', 'Shopping', 'Bills', 'Utilities',
-  'Health', 'Entertainment', 'Travel', 'Education', 'Other',
-  'Salary', 'Bonus'
+const defaultCategories: Category[] = [
+  // Income categories
+  { id: 'salary', name: 'Salary', icon: 'Briefcase', color: '#10B981', type: 'income', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'freelance', name: 'Freelance', icon: 'Laptop', color: '#3B82F6', type: 'income', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'investment', name: 'Investment', icon: 'TrendingUp', color: '#8B5CF6', type: 'income', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'gift', name: 'Gift', icon: 'Gift', color: '#F59E0B', type: 'income', isCustom: false, createdAt: new Date().toISOString() },
+  
+  // Expense categories
+  { id: 'food', name: 'Food', icon: 'Utensils', color: '#EF4444', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'transport', name: 'Transport', icon: 'Car', color: '#F97316', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'bills', name: 'Bills', icon: 'FileText', color: '#84CC16', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'entertainment', name: 'Entertainment', icon: 'Film', color: '#EC4899', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'shopping', name: 'Shopping', icon: 'ShoppingBag', color: '#06B6D4', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'health', name: 'Health', icon: 'Heart', color: '#DC2626', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'education', name: 'Education', icon: 'BookOpen', color: '#7C3AED', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
+  { id: 'other', name: 'Other', icon: 'MoreHorizontal', color: '#6B7280', type: 'expense', isCustom: false, createdAt: new Date().toISOString() },
 ]
 
-export const useAppStore = create<AppStore>()(
+export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // UI State
       tab: 0,
-      setTab: (tab) => set({ tab }),
-      sidebarOpen: false,
-      setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       showAdd: false,
-      setShowAdd: (showAdd) => set({ showAdd }),
       showAICategorizer: false,
-      setShowAICategorizer: (showAICategorizer) => set({ showAICategorizer }),
       showBillScanner: false,
-      setShowBillScanner: (showBillScanner) => set({ showBillScanner }),
-      loading: false,
-      setLoading: (loading) => set({ loading }),
-      error: null,
-      setError: (error) => set({ error }),
-
-      // Data State
+      sidebarOpen: false,
+      
+      // Data
       transactions: [],
-      accounts: [
-        { id: 'acc1', name: 'Main Wallet', balance: 152340.12, currency: 'USD', type: 'checking' },
-        { id: 'acc2', name: 'Savings', balance: 540000, currency: 'USD', type: 'savings' },
-      ],
-      budgets: [
-        { id: 'budget1', category: 'Food', limit: 500, spent: 62.80, period: 'monthly' },
-        { id: 'budget2', category: 'Transport', limit: 200, spent: 120, period: 'monthly' },
-      ],
-      settings: defaultSettings,
+      goals: [],
+      budgets: [],
+      recurringTransactions: [],
       categories: defaultCategories,
-
-      // Actions
+      settings: {
+        theme: 'system',
+        currency: 'USD',
+        language: 'en',
+        notifications: true,
+        autoSync: false,
+        defaultCategories: true,
+      },
+      
+      // Filters
+      searchQuery: '',
+      filterType: 'all',
+      filterDateRange: null,
+      filterCategory: null,
+      
+      // UI Actions
+      setTab: (tab) => set({ tab }),
+      setShowAdd: (show) => set({ showAdd: show }),
+      setShowAICategorizer: (show) => set({ showAICategorizer: show }),
+      setShowBillScanner: (show) => set({ showBillScanner: show }),
+      setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      
+      // Transaction actions
       addTransaction: (transaction) => {
         const newTransaction: Transaction = {
           ...transaction,
-          id: Math.random().toString(36).slice(2, 10),
+          id: Date.now().toString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
         set((state) => ({
-          transactions: [newTransaction, ...state.transactions]
+          transactions: [...state.transactions, newTransaction]
         }))
       },
-
+      
       updateTransaction: (id, updates) => {
         set((state) => ({
           transactions: state.transactions.map((t) =>
-            t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
+            t.id === id
+              ? { ...t, ...updates, updatedAt: new Date().toISOString() }
+              : t
           )
         }))
       },
-
+      
       deleteTransaction: (id) => {
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id)
         }))
       },
-
-      addAccount: (account) => {
-        const newAccount: Account = {
-          ...account,
-          id: Math.random().toString(36).slice(2, 10),
+      
+      getTransactions: () => get().transactions,
+      
+      getFilteredTransactions: () => {
+        const { transactions, searchQuery, filterType, filterDateRange, filterCategory } = get()
+        
+        return transactions.filter((transaction) => {
+          // Search filter
+          if (searchQuery) {
+            const query = searchQuery.toLowerCase()
+            if (!transaction.description.toLowerCase().includes(query) &&
+                !transaction.category.toLowerCase().includes(query)) {
+              return false
+            }
+          }
+          
+          // Type filter
+          if (filterType !== 'all' && transaction.type !== filterType) {
+            return false
+          }
+          
+          // Date range filter
+          if (filterDateRange) {
+            const transactionDate = new Date(transaction.date)
+            const startDate = new Date(filterDateRange.start)
+            const endDate = new Date(filterDateRange.end)
+            if (transactionDate < startDate || transactionDate > endDate) {
+              return false
+            }
+          }
+          
+          // Category filter
+          if (filterCategory && transaction.category !== filterCategory) {
+            return false
+          }
+          
+          return true
+        })
+      },
+      
+      // Goal actions
+      addGoal: (goal) => {
+        const newGoal: Goal = {
+          ...goal,
+          id: Date.now().toString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
         set((state) => ({
-          accounts: [...state.accounts, newAccount]
+          goals: [...state.goals, newGoal]
         }))
       },
-
-      updateAccount: (id, updates) => {
+      
+      updateGoal: (id, updates) => {
         set((state) => ({
-          accounts: state.accounts.map((a) =>
-            a.id === id ? { ...a, ...updates, updatedAt: new Date().toISOString() } : a
+          goals: state.goals.map((g) =>
+            g.id === id
+              ? { ...g, ...updates, updatedAt: new Date().toISOString() }
+              : g
           )
         }))
       },
-
-      deleteAccount: (id) => {
+      
+      deleteGoal: (id) => {
         set((state) => ({
-          accounts: state.accounts.filter((a) => a.id !== id)
+          goals: state.goals.filter((g) => g.id !== id)
         }))
       },
-
+      
+      addToGoal: (id, amount) => {
+        set((state) => ({
+          goals: state.goals.map((g) =>
+            g.id === id
+              ? { ...g, currentAmount: g.currentAmount + amount, updatedAt: new Date().toISOString() }
+              : g
+          )
+        }))
+      },
+      
+      // Budget actions
       addBudget: (budget) => {
         const newBudget: Budget = {
           ...budget,
-          id: Math.random().toString(36).slice(2, 10),
+          id: Date.now().toString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
@@ -158,90 +318,222 @@ export const useAppStore = create<AppStore>()(
           budgets: [...state.budgets, newBudget]
         }))
       },
-
+      
       updateBudget: (id, updates) => {
         set((state) => ({
           budgets: state.budgets.map((b) =>
-            b.id === id ? { ...b, ...updates, updatedAt: new Date().toISOString() } : b
+            b.id === id
+              ? { ...b, ...updates, updatedAt: new Date().toISOString() }
+              : b
           )
         }))
       },
-
+      
       deleteBudget: (id) => {
         set((state) => ({
           budgets: state.budgets.filter((b) => b.id !== id)
         }))
       },
-
-      updateSettings: (updates) => {
+      
+      // Recurring transaction actions
+      addRecurringTransaction: (transaction) => {
+        const newTransaction: RecurringTransaction = {
+          ...transaction,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
         set((state) => ({
-          settings: { ...state.settings, ...updates }
+          recurringTransactions: [...state.recurringTransactions, newTransaction]
         }))
       },
-
-      addCategory: (category) => {
+      
+      updateRecurringTransaction: (id, updates) => {
         set((state) => ({
-          categories: [...state.categories, category]
+          recurringTransactions: state.recurringTransactions.map((t) =>
+            t.id === id
+              ? { ...t, ...updates, updatedAt: new Date().toISOString() }
+              : t
+          )
         }))
       },
-
-      removeCategory: (category) => {
+      
+      deleteRecurringTransaction: (id) => {
         set((state) => ({
-          categories: state.categories.filter((c) => c !== category)
+          recurringTransactions: state.recurringTransactions.filter((t) => t.id !== id)
         }))
       },
-
-      // Computed values
-      getTotals: () => {
-        const { transactions, accounts } = get()
-        const income = transactions
-          .filter((t) => t.type === 'income')
-          .reduce((sum, t) => sum + t.amount, 0)
-        const expenses = transactions
-          .filter((t) => t.type === 'expense')
-          .reduce((sum, t) => sum + t.amount, 0)
-        const balance = accounts.reduce((sum, a) => sum + a.balance, 0) + income - expenses
-        return { income, expenses, balance }
-      },
-
-      getTransactionsByCategory: () => {
-        const { transactions } = get()
-        const categoryMap: Record<string, number> = {}
-        transactions
-          .filter((t) => t.type === 'expense')
-          .forEach((t) => {
-            categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount
-          })
-        return categoryMap
-      },
-
-      getMonthlySeries: () => {
-        const { transactions } = get()
-        const dayMap: Record<string, { income: number; expense: number }> = {}
+      
+      processRecurringTransactions: () => {
+        const { recurringTransactions, addTransaction } = get()
+        const today = new Date().toISOString().split('T')[0]
         
-        transactions.forEach((t) => {
-          const day = t.date.slice(8, 10)
-          if (!dayMap[day]) {
-            dayMap[day] = { day, income: 0, expense: 0 }
-          }
-          if (t.type === 'income') {
-            dayMap[day].income += t.amount
-          } else {
-            dayMap[day].expense += t.amount
+        recurringTransactions.forEach((recurring) => {
+          if (recurring.isActive && recurring.nextDate === today) {
+            addTransaction({
+              type: recurring.type,
+              amount: recurring.amount,
+              description: recurring.description,
+              category: recurring.category,
+              date: today,
+            })
+            
+            // Calculate next date
+            const nextDate = new Date(recurring.nextDate)
+            switch (recurring.frequency) {
+              case 'daily':
+                nextDate.setDate(nextDate.getDate() + 1)
+                break
+              case 'weekly':
+                nextDate.setDate(nextDate.getDate() + 7)
+                break
+              case 'monthly':
+                nextDate.setMonth(nextDate.getMonth() + 1)
+                break
+              case 'yearly':
+                nextDate.setFullYear(nextDate.getFullYear() + 1)
+                break
+            }
+            
+            // Update next date
+            set((state) => ({
+              recurringTransactions: state.recurringTransactions.map((t) =>
+                t.id === recurring.id
+                  ? { ...t, nextDate: nextDate.toISOString().split('T')[0] }
+                  : t
+              )
+            }))
           }
         })
+      },
+      
+      // Category actions
+      addCategory: (category) => {
+        const newCategory: Category = {
+          ...category,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+        }
+        set((state) => ({
+          categories: [...state.categories, newCategory]
+        }))
+      },
+      
+      updateCategory: (id, updates) => {
+        set((state) => ({
+          categories: state.categories.map((c) =>
+            c.id === id
+              ? { ...c, ...updates }
+              : c
+          )
+        }))
+      },
+      
+      deleteCategory: (id) => {
+        set((state) => ({
+          categories: state.categories.filter((c) => c.id !== id)
+        }))
+      },
+      
+      // Settings actions
+      updateSettings: (settings) => {
+        set((state) => ({
+          settings: { ...state.settings, ...settings }
+        }))
+      },
+      
+      // Filter actions
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setFilterType: (type) => set({ filterType: type }),
+      setFilterDateRange: (range) => set({ filterDateRange: range }),
+      setFilterCategory: (category) => set({ filterCategory: category }),
+      clearFilters: () => set({
+        searchQuery: '',
+        filterType: 'all',
+        filterDateRange: null,
+        filterCategory: null,
+      }),
+      
+      // Export actions
+      exportToCSV: () => {
+        const { transactions } = get()
+        const headers = ['Date', 'Type', 'Amount', 'Description', 'Category']
+        const rows = transactions.map(t => [
+          t.date,
+          t.type,
+          t.amount.toString(),
+          t.description,
+          t.category
+        ])
+        return [headers, ...rows].map(row => row.join(',')).join('\n')
+      },
+      
+      exportToJSON: () => {
+        const state = get()
+        return JSON.stringify({
+          transactions: state.transactions,
+          goals: state.goals,
+          budgets: state.budgets,
+          recurringTransactions: state.recurringTransactions,
+          categories: state.categories,
+          settings: state.settings,
+        }, null, 2)
+      },
+      
+      importFromCSV: (csvData) => {
+        const lines = csvData.split('\n')
+        const headers = lines[0].split(',')
+        const transactions = lines.slice(1).map(line => {
+          const values = line.split(',')
+          return {
+            type: values[1] as 'income' | 'expense',
+            amount: parseFloat(values[2]) || 0,
+            description: values[3] || '',
+            category: values[4] || '',
+            date: values[0] || new Date().toISOString().split('T')[0],
+          }
+        }).filter(t => t.amount > 0)
         
-        return Object.values(dayMap).sort((a, b) => a.day.localeCompare(b.day))
+        transactions.forEach(transaction => {
+          get().addTransaction(transaction)
+        })
+      },
+      
+      importFromJSON: (jsonData) => {
+        try {
+          const data = JSON.parse(jsonData)
+          if (data.transactions) {
+            set({ transactions: data.transactions })
+          }
+          if (data.goals) {
+            set({ goals: data.goals })
+          }
+          if (data.budgets) {
+            set({ budgets: data.budgets })
+          }
+          if (data.recurringTransactions) {
+            set({ recurringTransactions: data.recurringTransactions })
+          }
+          if (data.categories) {
+            set({ categories: data.categories })
+          }
+          if (data.settings) {
+            set({ settings: data.settings })
+          }
+        } catch (error) {
+          console.error('Error importing JSON:', error)
+        }
       },
     }),
     {
       name: 'fintrack-storage',
       partialize: (state) => ({
         transactions: state.transactions,
-        accounts: state.accounts,
+        goals: state.goals,
         budgets: state.budgets,
-        settings: state.settings,
+        recurringTransactions: state.recurringTransactions,
         categories: state.categories,
+        settings: state.settings,
       }),
     }
   )

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Toaster } from 'sonner'
 import { useAppStore } from './stores/appStore'
@@ -8,11 +8,20 @@ import { WalletsScreen } from './screens/WalletsScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { AIAdvisorScreen } from './screens/AIAdvisorScreen'
 import { GoalsScreen } from './screens/GoalsScreen'
+import { CalendarScreen } from './screens/CalendarScreen'
 import { BottomNavigation } from './components/layout/BottomNavigation'
 import { AddTransactionModal } from './components/modals/AddTransactionModal'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
 import { BillScanner } from './components/scanning/BillScanner'
 import { Sidebar } from './components/Sidebar'
+import { FloatingActionButton } from './components/FloatingActionButton'
+import { TransactionList } from './components/TransactionList'
+import { SearchAndFilter } from './components/SearchAndFilter'
+import { ExportImport } from './components/ExportImport'
+import { CategoryChart } from './components/analytics/CategoryChart'
+import { TrendsChart } from './components/analytics/TrendsChart'
+import { BudgetTracker } from './components/BudgetTracker'
+import { RecurringTransactions } from './components/RecurringTransactions'
 
 export default function App() {
   const {
@@ -25,11 +34,14 @@ export default function App() {
     setShowBillScanner,
     settings,
     setSettings,
+    getFilteredTransactions,
+    processRecurringTransactions,
   } = useAppStore()
 
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [editingTransaction, setEditingTransaction] = useState(null)
 
   const handleLogin = () => {
     setIsAuthenticated(true)
@@ -38,6 +50,11 @@ export default function App() {
   const handleLogout = () => {
     setIsAuthenticated(false)
   }
+
+  // Process recurring transactions on app start
+  useEffect(() => {
+    processRecurringTransactions()
+  }, [processRecurringTransactions])
 
   // Theme handling
   useEffect(() => {
@@ -60,15 +77,56 @@ export default function App() {
   }, [settings.theme])
 
   const renderScreen = () => {
+    const transactions = getFilteredTransactions()
+    
     switch (tab) {
       case 0:
         return <HomeScreen />
       case 1:
-        return <StatsScreen />
+        return (
+          <div className="pb-28">
+            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
+              <h1 className="text-lg font-semibold text-foreground text-center">Insights</h1>
+            </div>
+            <div className="px-4 space-y-6">
+              <SearchAndFilter />
+              <TrendsChart />
+              <CategoryChart />
+            </div>
+          </div>
+        )
+      case 2:
+        return <CalendarScreen />
       case 3:
-        return <WalletsScreen />
+        return (
+          <div className="pb-28">
+            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
+              <h1 className="text-lg font-semibold text-foreground text-center">Transactions</h1>
+            </div>
+            <div className="px-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <SearchAndFilter />
+                <ExportImport />
+              </div>
+              <TransactionList 
+                transactions={transactions} 
+                onEdit={setEditingTransaction}
+              />
+            </div>
+          </div>
+        )
       case 4:
-        return <ProfileScreen />
+        return (
+          <div className="pb-28">
+            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
+              <h1 className="text-lg font-semibold text-foreground text-center">Settings</h1>
+            </div>
+            <div className="px-4 space-y-6">
+              <BudgetTracker />
+              <RecurringTransactions />
+            </div>
+          </div>
+        )
       case 5:
         return <AIAdvisorScreen />
       case 6:
@@ -84,6 +142,7 @@ export default function App() {
         {renderScreen()}
         
         <BottomNavigation />
+        <FloatingActionButton />
         
         <Sidebar
           isOpen={sidebarOpen}
@@ -98,6 +157,7 @@ export default function App() {
         {showAdd && (
           <AddTransactionModal
             onClose={() => setShowAdd(false)}
+            editingTransaction={editingTransaction}
           />
         )}
         

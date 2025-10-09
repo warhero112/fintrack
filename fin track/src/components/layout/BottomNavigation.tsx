@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Trophy, BarChart3, Plus, Brain, Settings } from 'lucide-react'
+import { Home, Trophy, BarChart3, Calendar, List, Settings, Brain } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 
 export const BottomNavigation: React.FC = () => {
@@ -7,18 +7,16 @@ export const BottomNavigation: React.FC = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', index: 0 },
-    { icon: Trophy, label: 'Goals', index: 6 },
     { icon: BarChart3, label: 'Insights', index: 1 },
-    { icon: Brain, label: 'AI Advisor', index: 5 },
+    { icon: Calendar, label: 'Calendar', index: 2 },
+    { icon: List, label: 'Transactions', index: 3 },
     { icon: Settings, label: 'Settings', index: 4 },
+    { icon: Brain, label: 'AI Advisor', index: 5 },
+    { icon: Trophy, label: 'Goals', index: 6 },
   ]
 
   const handleNavClick = (item: typeof navItems[0]) => {
-    if (item.index === 2) { // Add button
-      setShowAdd(true)
-    } else {
-      setTab(item.index)
-    }
+    setTab(item.index)
   }
 
   return (
@@ -34,7 +32,7 @@ export const BottomNavigation: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <div className="flex gap-2 border-t border-border bg-background px-4 pb-3 pt-2">
+      <div className="flex gap-1 border-t border-border bg-background px-2 pb-3 pt-2">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = tab === item.index
@@ -43,15 +41,13 @@ export const BottomNavigation: React.FC = () => {
             <button
               key={item.index}
               onClick={() => handleNavClick(item)}
-              className={`just flex flex-1 flex-col items-center justify-end gap-1 ${
-                isActive ? 'text-foreground' : 'text-muted-foreground'
+              className={`flex flex-1 flex-col items-center justify-end gap-1 py-2 px-1 rounded-lg transition-colors ${
+                isActive ? 'text-foreground bg-muted' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
             >
-              <div className={`flex h-8 items-center justify-center ${
-                isActive ? 'text-foreground' : 'text-muted-foreground'
-              }`}>
+              <div className="flex h-6 items-center justify-center">
                 <Icon 
-                  size={24} 
+                  size={20} 
                   fill={isActive ? 'currentColor' : 'none'}
                 />
               </div>

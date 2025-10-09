@@ -1,209 +1,240 @@
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Camera, Brain } from 'lucide-react'
-import { useAppStore } from '../../stores/appStore'
-import { useTransactions } from '../../hooks/useTransactions'
-import { useErrorHandler } from '../../hooks/useErrorHandler'
-import { transactionSchema, TransactionFormData } from '../../utils/validation/schemas'
+import React, { useState, useEffect } from 'react'
+import { X, Calendar, DollarSign, FileText, Tag } from 'lucide-react'
+import { useAppStore, Transaction } from '../../stores/appStore'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 
 interface AddTransactionModalProps {
   onClose: () => void
+  editingTransaction?: Transaction | null
 }
 
-export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ onClose }) => {
-  const { accounts, categories, settings, setShowBillScanner, setShowAICategorizer } = useAppStore()
-  const { createTransaction } = useTransactions()
-  const { handleError, handleSuccess } = useErrorHandler()
+export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
+  onClose, 
+  editingTransaction 
+}) => {
+  const { 
+    addTransaction, 
+    updateTransaction, 
+    categories, 
+    settings 
+  } = useAppStore()
   
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense')
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      amount: 0,
-      label: '',
-      category: categories[0] || 'Food',
-      type: 'expense',
-      date: new Date().toISOString().slice(0, 10),
-      accountId: accounts[0]?.id || '',
-    }
+  const [formData, setFormData] = useState({
+    type: 'expense' as 'income' | 'expense',
+    amount: '',
+    description: '',
+    category: '',
+    date: new Date().toISOString().split('T')[0]
   })
+  
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const watchedValues = watch()
-
-  const onSubmit = async (data: TransactionFormData) => {
-    setIsSubmitting(true)
-    
-    try {
-      const result = createTransaction(data)
-      
-      if (result.success) {
-        handleSuccess('Transaction added successfully!')
-        onClose()
-      } else {
-        handleError(result.error || 'Failed to add transaction')
-      }
-    } catch (error) {
-      handleError(error, 'Failed to add transaction')
-    } finally {
-      setIsSubmitting(false)
+  useEffect(() => {
+    if (editingTransaction) {
+      setFormData({
+        type: editingTransaction.type,
+        amount: editingTransaction.amount.toString(),
+        description: editingTransaction.description,
+        category: editingTransaction.category,
+        date: editingTransaction.date
+      })
     }
+  }, [editingTransaction])
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+    
+    if (!formData.amount || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = 'Amount must be greater than 0'
+    }
+    
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required'
+    }
+    
+    if (!formData.category) {
+      newErrors.category = 'Category is required'
+    }
+    
+    if (!formData.date) {
+      newErrors.date = 'Date is required'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const handleAICategorization = () => {
-    if (!watchedValues.label || !watchedValues.amount) {
-      handleError('Please enter description and amount first.')
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
       return
     }
-    setShowAICategorizer(true)
+
+    const transactionData = {
+      type: formData.type,
+      amount: parseFloat(formData.amount),
+      description: formData.description.trim(),
+      category: formData.category,
+      date: formData.date
+    }
+
+    if (editingTransaction) {
+      updateTransaction(editingTransaction.id, transactionData)
+    } else {
+      addTransaction(transactionData)
+    }
+
+    onClose()
   }
 
-  const handleBillScan = () => {
-    setShowBillScanner(true)
-  }
-
-  const currentCategories = transactionType === 'income' 
-    ? (settings.incomeCategories || categories)
-    : (settings.expenseCategories || categories)
+  const filteredCategories = categories.filter(cat => cat.type === formData.type)
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-card rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-card shadow-sm">
-          <button 
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <h1 className="text-[24px] font-bold leading-tight tracking-[-0.015em] text-center text-foreground">Add Transaction</h1>
-          <div></div>
+        <div className="border-b border-border p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-foreground">
+              {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="p-2"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
-        {/* Form */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Amount */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 pb-4">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-foreground text-base font-medium leading-normal pb-2">Amount</p>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-foreground focus:outline-0 focus:ring-0 border-none bg-muted focus:border-none h-14 placeholder:text-muted-foreground p-4 text-base font-normal leading-normal"
-                  placeholder="0.00"
-                  {...register('amount', { valueAsNumber: true })}
-                />
-                {errors.amount && (
-                  <p className="text-red-500 text-xs mt-1">{errors.amount.message}</p>
-                )}
-              </label>
-            </div>
-
-            {/* Description */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 pb-4">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-foreground text-base font-medium leading-normal pb-2">Description</p>
-                <input
-                  type="text"
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-foreground focus:outline-0 focus:ring-0 border-none bg-muted focus:border-none h-14 placeholder:text-muted-foreground p-4 text-base font-normal leading-normal"
-                  placeholder="e.g., Groceries"
-                  {...register('label')}
-                />
-                {errors.label && (
-                  <p className="text-red-500 text-xs mt-1">{errors.label.message}</p>
-                )}
-              </label>
-            </div>
-
-            {/* Category */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 pb-4">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-foreground text-base font-medium leading-normal pb-2">Category</p>
-                <select
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-foreground focus:outline-0 focus:ring-0 border-none bg-muted focus:border-none h-14 placeholder:text-muted-foreground p-4 text-base font-normal leading-normal"
-                  {...register('category')}
-                >
-                  {currentCategories.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                {errors.category && (
-                  <p className="text-red-500 text-xs mt-1">{errors.category.message}</p>
-                )}
-              </label>
-            </div>
-
-            {/* Date */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 pb-4">
-              <label className="flex flex-col min-w-40 flex-1">
-                <p className="text-foreground text-base font-medium leading-normal pb-2">Date</p>
-                <input
-                  type="date"
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-foreground focus:outline-0 focus:ring-0 border-none bg-muted focus:border-none h-14 placeholder:text-muted-foreground p-4 text-base font-normal leading-normal"
-                  {...register('date')}
-                />
-                {errors.date && (
-                  <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>
-                )}
-              </label>
-            </div>
-
-            {/* Transaction Type Toggle */}
-            <div className="flex justify-center py-4">
-              <div className="flex h-10 w-48 items-center justify-center rounded-xl bg-muted p-1">
-                <label className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-xl px-2 ${transactionType === 'expense' ? 'bg-background shadow-[0_0_4px_rgba(0,0,0,0.1)] text-foreground' : 'text-muted-foreground'} text-sm font-medium leading-normal`}>
-                  <span className="truncate">Expense</span>
-                  <input 
-                    type="radio" 
-                    name="transactionType" 
-                    className="invisible w-0" 
-                    value="expense" 
-                    checked={transactionType === 'expense'}
-                    onChange={() => {
-                      setTransactionType('expense')
-                      setValue('type', 'expense')
-                    }}
-                  />
-                </label>
-                <label className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-xl px-2 ${transactionType === 'income' ? 'bg-background shadow-[0_0_4px_rgba(0,0,0,0.1)] text-foreground' : 'text-muted-foreground'} text-sm font-medium leading-normal`}>
-                  <span className="truncate">Income</span>
-                  <input 
-                    type="radio" 
-                    name="transactionType" 
-                    className="invisible w-0" 
-                    value="income"
-                    checked={transactionType === 'income'}
-                    onChange={() => {
-                      setTransactionType('income')
-                      setValue('type', 'income')
-                    }}
-                  />
-                </label>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Type Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Transaction Type</Label>
+            <RadioGroup
+              value={formData.type}
+              onValueChange={(value) => setFormData({ ...formData, type: value as 'income' | 'expense' })}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="expense" id="expense" />
+                <Label htmlFor="expense" className="cursor-pointer">Expense</Label>
               </div>
-            </div>
-          </form>
-        </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="income" id="income" />
+                <Label htmlFor="income" className="cursor-pointer">Income</Label>
+              </div>
+            </RadioGroup>
+          </div>
 
-        {/* Bottom Action */}
-        <div className="sticky bottom-0 flex justify-center p-4 bg-card/90 backdrop-blur-sm">
-          <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-14 px-4 flex-1 bg-primary text-primary-foreground text-lg font-bold leading-normal tracking-[0.015em] shadow-lg hover:bg-primary/90 disabled:opacity-50"
-          >
-            <span className="truncate">{isSubmitting ? 'Saving...' : 'Save Transaction'}</span>
-          </button>
-        </div>
+          {/* Amount */}
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-sm font-medium">
+              Amount <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="pl-10"
+                placeholder="0.00"
+              />
+            </div>
+            {errors.amount && (
+              <p className="text-sm text-destructive">{errors.amount}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="pl-10"
+                placeholder="What was this for?"
+              />
+            </div>
+            {errors.description && (
+              <p className="text-sm text-destructive">{errors.description}</p>
+            )}
+          </div>
+
+          {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category" className="text-sm font-medium">
+              Category <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative">
+              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
+              >
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: category.color }}
+                        />
+                        {category.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {errors.category && (
+              <p className="text-sm text-destructive">{errors.category}</p>
+            )}
+          </div>
+
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date" className="text-sm font-medium">
+              Date <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="pl-10"
+              />
+            </div>
+            {errors.date && (
+              <p className="text-sm text-destructive">{errors.date}</p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <Button type="submit" className="w-full">
+            {editingTransaction ? 'Update Transaction' : 'Add Transaction'}
+          </Button>
+        </form>
       </div>
     </div>
   )

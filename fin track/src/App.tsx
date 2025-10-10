@@ -11,7 +11,7 @@ import { DesktopNav } from './components/layout/DesktopNav'
 
 // Screen Components
 import { HomeScreen } from './screens/HomeScreen'
-import { StatsScreen } from './screens/StatsScreen'
+import { EnhancedInsightsScreen } from './screens/EnhancedInsightsScreen'
 import { CalendarScreen } from './screens/CalendarScreen'
 import { WalletsScreen } from './screens/WalletsScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
@@ -92,14 +92,8 @@ function App() {
     switch (tab) {
       case 0: // Home
         return <HomeScreen {...screenProps} />
-      case 1: // Insights
-        return (
-          <div className="space-y-6">
-            <SearchAndFilter />
-            <TrendsChart />
-            <CategoryChart />
-          </div>
-        )
+      case 1: // Enhanced Insights
+        return <EnhancedInsightsScreen {...screenProps} />
       case 2: // Calendar
         return <CalendarScreen {...screenProps} />
       case 3: // Transactions

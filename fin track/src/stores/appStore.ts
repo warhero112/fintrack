@@ -75,6 +75,7 @@ interface AppState {
   showAICategorizer: boolean
   showBillScanner: boolean
   sidebarOpen: boolean
+  editingTransaction: Transaction | null
   
   // Data
   transactions: Transaction[]
@@ -96,6 +97,7 @@ interface AppState {
   setShowAICategorizer: (show: boolean) => void
   setShowBillScanner: (show: boolean) => void
   setSidebarOpen: (open: boolean) => void
+  setEditingTransaction: (transaction: Transaction | null) => void
   
   // Transaction actions
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -103,6 +105,11 @@ interface AppState {
   deleteTransaction: (id: string) => void
   getTransactions: () => Transaction[]
   getFilteredTransactions: () => Transaction[]
+  
+  // Financial calculations
+  getTotals: () => { totalIncome: number; totalExpense: number; netWorth: number }
+  getMonthlyTotals: () => { income: number; expense: number; net: number }
+  getCategoryTotals: () => Record<string, { income: number; expense: number; net: number }>
   
   // Goal actions
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -170,6 +177,7 @@ export const useAppStore = create<AppState>()(
       showAICategorizer: false,
       showBillScanner: false,
       sidebarOpen: false,
+      editingTransaction: null,
       
       // Data
       transactions: [],
@@ -198,6 +206,7 @@ export const useAppStore = create<AppState>()(
       setShowAICategorizer: (show) => set({ showAICategorizer: show }),
       setShowBillScanner: (show) => set({ showBillScanner: show }),
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
+      setEditingTransaction: (transaction) => set({ editingTransaction: transaction }),
       
       // Transaction actions
       addTransaction: (transaction) => {
@@ -265,6 +274,67 @@ export const useAppStore = create<AppState>()(
           
           return true
         })
+      },
+      
+      // Financial calculations
+      getTotals: () => {
+        const { transactions } = get()
+        const totalIncome = transactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0)
+        const totalExpense = transactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0)
+        const netWorth = totalIncome - totalExpense
+        
+        return { totalIncome, totalExpense, netWorth }
+      },
+      
+      getMonthlyTotals: () => {
+        const { transactions } = get()
+        const now = new Date()
+        const currentMonth = now.getMonth()
+        const currentYear = now.getFullYear()
+        
+        const monthlyTransactions = transactions.filter(t => {
+          const transactionDate = new Date(t.date)
+          return transactionDate.getMonth() === currentMonth && 
+                 transactionDate.getFullYear() === currentYear
+        })
+        
+        const income = monthlyTransactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0)
+        const expense = monthlyTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0)
+        const net = income - expense
+        
+        return { income, expense, net }
+      },
+      
+      getCategoryTotals: () => {
+        const { transactions } = get()
+        const categoryTotals: Record<string, { income: number; expense: number; net: number }> = {}
+        
+        transactions.forEach(transaction => {
+          if (!categoryTotals[transaction.category]) {
+            categoryTotals[transaction.category] = { income: 0, expense: 0, net: 0 }
+          }
+          
+          if (transaction.type === 'income') {
+            categoryTotals[transaction.category].income += transaction.amount
+          } else {
+            categoryTotals[transaction.category].expense += transaction.amount
+          }
+        })
+        
+        // Calculate net for each category
+        Object.keys(categoryTotals).forEach(category => {
+          categoryTotals[category].net = categoryTotals[category].income - categoryTotals[category].expense
+        })
+        
+        return categoryTotals
       },
       
       // Goal actions

@@ -1,59 +1,20 @@
 import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { useAppStore } from '../../stores/appStore'
-
-interface TrendData {
-  month: string
-  income: number
-  expense: number
-  net: number
-}
+import { TimeSeriesDataPoint, TooltipProps } from '../../types'
 
 export const TrendsChart: React.FC = () => {
-  const { getFilteredTransactions } = useAppStore()
-  const transactions = getFilteredTransactions()
+  const { transactions } = useAppStore()
 
-  // Group transactions by month
-  const monthlyData = transactions.reduce((acc, transaction) => {
-    const date = new Date(transaction.date)
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    
-    if (!acc[monthKey]) {
-      acc[monthKey] = {
-        month: monthName,
-        income: 0,
-        expense: 0,
-        net: 0
-      }
-    }
-    
-    if (transaction.type === 'income') {
-      acc[monthKey].income += transaction.amount
-    } else {
-      acc[monthKey].expense += transaction.amount
-    }
-    
-    acc[monthKey].net = acc[monthKey].income - acc[monthKey].expense
-    
-    return acc
-  }, {} as Record<string, TrendData>)
-
-  // Convert to array and sort by date
-  const chartData = Object.values(monthlyData).sort((a, b) => {
-    const dateA = new Date(a.month + ' 1')
-    const dateB = new Date(b.month + ' 1')
-    return dateA.getTime() - dateB.getTime()
-  })
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-medium text-foreground">{label}</p>
+          {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: ${entry.value.toFixed(2)}
+              {entry.name}: ${entry.value?.toLocaleString()}
             </p>
           ))}
         </div>
@@ -62,86 +23,102 @@ export const TrendsChart: React.FC = () => {
     return null
   }
 
-  if (chartData.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No trend data available</p>
-      </div>
-    )
+  const getChartData = (): TimeSeriesDataPoint[] => {
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - i)
+      return date
+    }).reverse()
+
+    return last6Months.map(date => {
+      const monthKey = date.toISOString().slice(0, 7) // YYYY-MM
+      const monthTransactions = transactions.filter(t => 
+        t.date.startsWith(monthKey)
+      )
+
+      const income = monthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      const expenses = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      return {
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        income: Math.round(income),
+        expenses: Math.round(expenses),
+        net: Math.round(income - expenses)
+      }
+    })
   }
 
+  const data = getChartData()
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-foreground">Income vs Expenses Trend</h3>
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-            <XAxis 
-              dataKey="month" 
-              className="text-xs"
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
-              className="text-xs"
-              tick={{ fontSize: 12 }}
-              tickFormatter={(value) => `$${value}`}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="income" 
-              stroke="#10B981" 
-              strokeWidth={2}
-              name="Income"
-              dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="expense" 
-              stroke="#EF4444" 
-              strokeWidth={2}
-              name="Expenses"
-              dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="net" 
-              stroke="#3B82F6" 
-              strokeWidth={2}
-              name="Net"
-              dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      
-      {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center p-3 bg-card border border-border rounded-lg">
-          <p className="text-sm text-muted-foreground">Total Income</p>
-          <p className="text-lg font-semibold text-green-600">
-            ${chartData.reduce((sum, item) => sum + item.income, 0).toFixed(2)}
-          </p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Income vs Expenses Trend</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis 
+                dataKey="month" 
+                className="text-xs"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                className="text-xs"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `$${value.toLocaleString()}`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line 
+                type="monotone" 
+                dataKey="income" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                name="Income"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="expenses" 
+                stroke="#ef4444" 
+                strokeWidth={2}
+                dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                name="Expenses"
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div className="text-center p-3 bg-card border border-border rounded-lg">
-          <p className="text-sm text-muted-foreground">Total Expenses</p>
-          <p className="text-lg font-semibold text-red-600">
-            ${chartData.reduce((sum, item) => sum + item.expense, 0).toFixed(2)}
-          </p>
+        
+        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Total Income</p>
+            <p className="text-lg font-semibold text-green-600">
+              ${data.reduce((sum, d) => sum + d.income, 0).toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Total Expenses</p>
+            <p className="text-lg font-semibold text-red-600">
+              ${data.reduce((sum, d) => sum + d.expenses, 0).toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Net</p>
+            <p className={`text-lg font-semibold ${
+              data.reduce((sum, d) => sum + d.net, 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              ${data.reduce((sum, d) => sum + d.net, 0).toLocaleString()}
+            </p>
+          </div>
         </div>
-        <div className="text-center p-3 bg-card border border-border rounded-lg">
-          <p className="text-sm text-muted-foreground">Net Total</p>
-          <p className={`text-lg font-semibold ${
-            chartData.reduce((sum, item) => sum + item.net, 0) >= 0 
-              ? 'text-green-600' 
-              : 'text-red-600'
-          }`}>
-            ${chartData.reduce((sum, item) => sum + item.net, 0).toFixed(2)}
-          </p>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

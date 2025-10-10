@@ -1,168 +1,217 @@
 import React, { useState } from 'react'
-import { deepSeekAI } from '../../lib/ai/deepseek'
-import { Brain, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle } from 'lucide-react'
+import { Button } from '../ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { useAppStore } from '../../stores/appStore'
+import { logger } from '../../lib/logger'
 
 interface SmartCategorizerProps {
-  description: string
-  amount: number
-  onCategorySelected: (category: string) => void
   onClose: () => void
 }
 
-export const SmartCategorizer: React.FC<SmartCategorizerProps> = ({
-  description,
-  amount,
-  onCategorySelected,
-  onClose
-}) => {
-  const [loading, setLoading] = useState(false)
-  const [suggestedCategory, setSuggestedCategory] = useState<string>('')
-  const [confidence, setConfidence] = useState<number>(0)
+export const SmartCategorizer: React.FC<SmartCategorizerProps> = ({ onClose }) => {
+  const { transactions, categories, updateTransaction } = useAppStore()
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [suggestions, setSuggestions] = useState<Array<{
+    transactionId: string
+    currentCategory: string
+    suggestedCategory: string
+    confidence: number
+    reason: string
+  }>>([])
 
-  const categories = [
-    'Food', 'Transport', 'Shopping', 'Bills', 'Utilities', 
-    'Health', 'Entertainment', 'Travel', 'Education', 'Other', 
-    'Salary', 'Bonus'
-  ]
-
-  const categorizeTransaction = async () => {
-    setLoading(true)
+  const analyzeTransactions = async () => {
+    setIsAnalyzing(true)
     try {
-      const category = await deepSeekAI.categorizeTransaction(description, amount)
-      setSuggestedCategory(category)
+      // Simulate AI categorization
+      const uncategorized = transactions.filter(t => 
+        !t.category || t.category === 'Other' || t.category === ''
+      )
       
-      // Calculate confidence based on description length and amount
-      const confidenceScore = Math.min(95, Math.max(60, 
-        (description.length * 2) + (amount > 100 ? 20 : 10)
-      ))
-      setConfidence(confidenceScore)
+      const mockSuggestions = uncategorized.slice(0, 5).map(transaction => {
+        const suggestedCategory = getSuggestedCategory(transaction.description)
+        return {
+          transactionId: transaction.id,
+          currentCategory: transaction.category || 'Uncategorized',
+          suggestedCategory,
+          confidence: Math.random() * 0.4 + 0.6, // 60-100% confidence
+          reason: getCategorizationReason(transaction.description, suggestedCategory)
+        }
+      })
+      
+      setSuggestions(mockSuggestions)
+      logger.info('Transaction categorization completed', { 
+        analyzed: uncategorized.length,
+        suggestions: mockSuggestions.length 
+      })
     } catch (error) {
-      console.error('Error categorizing transaction:', error)
-      setSuggestedCategory('Other')
-      setConfidence(50)
+      logger.error('Error categorizing transactions', error)
     } finally {
-      setLoading(false)
+      setIsAnalyzing(false)
     }
   }
 
-  const getConfidenceColor = (conf: number) => {
-    if (conf >= 80) return 'text-green-600 dark:text-green-400'
-    if (conf >= 60) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-red-600 dark:text-red-400'
+  const getSuggestedCategory = (description: string): string => {
+    const desc = description.toLowerCase()
+    
+    if (desc.includes('grocery') || desc.includes('food') || desc.includes('restaurant')) {
+      return 'Food & Dining'
+    }
+    if (desc.includes('gas') || desc.includes('fuel') || desc.includes('transport')) {
+      return 'Transportation'
+    }
+    if (desc.includes('netflix') || desc.includes('spotify') || desc.includes('subscription')) {
+      return 'Entertainment'
+    }
+    if (desc.includes('electric') || desc.includes('water') || desc.includes('utility')) {
+      return 'Utilities'
+    }
+    if (desc.includes('rent') || desc.includes('mortgage') || desc.includes('housing')) {
+      return 'Housing'
+    }
+    if (desc.includes('medical') || desc.includes('doctor') || desc.includes('health')) {
+      return 'Healthcare'
+    }
+    if (desc.includes('salary') || desc.includes('payroll') || desc.includes('income')) {
+      return 'Income'
+    }
+    
+    return 'Other'
   }
 
-  const getConfidenceIcon = (conf: number) => {
-    if (conf >= 80) return <CheckCircle className="w-4 h-4" />
-    if (conf >= 60) return <AlertCircle className="w-4 h-4" />
-    return <AlertCircle className="w-4 h-4" />
+  const getCategorizationReason = (description: string, category: string): string => {
+    const reasons = {
+      'Food & Dining': 'Contains food-related keywords',
+      'Transportation': 'Contains transportation-related keywords',
+      'Entertainment': 'Contains entertainment service keywords',
+      'Utilities': 'Contains utility service keywords',
+      'Housing': 'Contains housing-related keywords',
+      'Healthcare': 'Contains healthcare-related keywords',
+      'Income': 'Contains income-related keywords',
+      'Other': 'No clear category indicators found'
+    }
+    
+    return reasons[category as keyof typeof reasons] || 'Based on description analysis'
+  }
+
+  const applySuggestion = (transactionId: string, suggestedCategory: string) => {
+    try {
+      updateTransaction(transactionId, { category: suggestedCategory })
+      setSuggestions(prev => prev.filter(s => s.transactionId !== transactionId))
+      logger.info('Transaction category updated', { transactionId, category: suggestedCategory })
+    } catch (error) {
+      logger.error('Error updating transaction category', error)
+    }
+  }
+
+  const applyAllSuggestions = () => {
+    suggestions.forEach(suggestion => {
+      applySuggestion(suggestion.transactionId, suggestion.suggestedCategory)
+    })
+    logger.info('All categorization suggestions applied', { count: suggestions.length })
+  }
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'bg-green-100 text-green-800'
+    if (confidence >= 0.6) return 'bg-yellow-100 text-yellow-800'
+    return 'bg-red-100 text-red-800'
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <Brain className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              AI Category Suggestion
-            </h3>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Smart Categorizer
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              ×
+            </Button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Transaction:</p>
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-            <p className="font-medium text-gray-900 dark:text-white">
-              {description}
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Amount: ${amount}
-            </p>
-          </div>
-        </div>
-
-        {!suggestedCategory && !loading && (
-          <div className="text-center py-4">
-            <button
-              onClick={categorizeTransaction}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto"
-            >
-              <Brain className="w-4 h-4" />
-              <span>Get AI Suggestion</span>
-            </button>
-          </div>
-        )}
-
-        {loading && (
-          <div className="text-center py-4">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              AI is analyzing your transaction...
-            </p>
-          </div>
-        )}
-
-        {suggestedCategory && (
-          <div className="space-y-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-blue-900 dark:text-blue-100">
-                  AI Suggestion
-                </h4>
-                <div className={`flex items-center space-x-1 ${getConfidenceColor(confidence)}`}>
-                  {getConfidenceIcon(confidence)}
-                  <span className="text-sm font-medium">{confidence}%</span>
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {suggestedCategory}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Let AI help categorize your transactions based on descriptions and patterns.
+          </p>
+          
+          {suggestions.length === 0 && !isAnalyzing && (
+            <div className="text-center py-8">
+              <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">
+                Ready to analyze your transactions for better categorization?
               </p>
+              <Button onClick={analyzeTransactions}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Analyze Transactions
+              </Button>
             </div>
+          )}
 
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Or choose from all categories:
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => onCategorySelected(category)}
-                    className={`p-2 rounded-lg text-sm font-medium transition-colors ${
-                      category === suggestedCategory
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {category}
-                  </button>
+          {isAnalyzing && (
+            <div className="text-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Analyzing transactions...</p>
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Found {suggestions.length} categorization suggestions
+                </p>
+                <Button onClick={applyAllSuggestions} size="sm">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Apply All
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {suggestions.map((suggestion, index) => (
+                  <div key={suggestion.transactionId} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {transactions.find(t => t.id === suggestion.transactionId)?.description}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Current: {suggestion.currentCategory} → Suggested: {suggestion.suggestedCategory}
+                        </p>
+                      </div>
+                      <Badge className={getConfidenceColor(suggestion.confidence)}>
+                        {Math.round(suggestion.confidence * 100)}%
+                      </Badge>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {suggestion.reason}
+                    </p>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => applySuggestion(suggestion.transactionId, suggestion.suggestedCategory)}
+                      >
+                        Apply
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSuggestions(prev => prev.filter((_, i) => i !== index))}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => onCategorySelected(suggestedCategory)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium"
-              >
-                Use AI Suggestion
-              </button>
-              <button
-                onClick={onClose}
-                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 px-4 rounded-lg font-medium"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

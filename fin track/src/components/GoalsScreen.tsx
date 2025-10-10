@@ -7,11 +7,12 @@ import { Label } from './ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Progress } from './ui/progress'
+import { Goal, GoalPriority } from '../types'
 
 export const GoalsScreen: React.FC = () => {
   const { goals, addGoal, updateGoal, deleteGoal, addToGoal } = useAppStore()
   const [showAddGoal, setShowAddGoal] = useState(false)
-  const [editingGoal, setEditingGoal] = useState(null)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -19,26 +20,23 @@ export const GoalsScreen: React.FC = () => {
     currentAmount: '',
     targetDate: '',
     category: 'savings',
-    priority: 'medium'
+    priority: 'medium' as GoalPriority
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const goal = {
-      id: editingGoal?.id || Date.now().toString(),
+    const goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'> = {
       title: formData.title,
       description: formData.description,
       targetAmount: parseFloat(formData.targetAmount),
       currentAmount: parseFloat(formData.currentAmount) || 0,
       targetDate: formData.targetDate,
       category: formData.category,
-      priority: formData.priority,
-      createdAt: editingGoal?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      priority: formData.priority
     }
 
     if (editingGoal) {
-      updateGoal(goal)
+      updateGoal(editingGoal.id, goal)
     } else {
       addGoal(goal)
     }
@@ -56,7 +54,7 @@ export const GoalsScreen: React.FC = () => {
     setEditingGoal(null)
   }
 
-  const handleEdit = (goal: any) => {
+  const handleEdit = (goal: Goal) => {
     setEditingGoal(goal)
     setFormData({
       title: goal.title,
@@ -83,7 +81,7 @@ export const GoalsScreen: React.FC = () => {
     }
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: GoalPriority) => {
     switch (priority) {
       case 'high': return 'text-red-600'
       case 'medium': return 'text-yellow-600'
@@ -201,7 +199,7 @@ export const GoalsScreen: React.FC = () => {
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={formData.priority}
-                    onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                    onValueChange={(value: GoalPriority) => setFormData({ ...formData, priority: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />

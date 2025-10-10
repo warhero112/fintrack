@@ -16,6 +16,7 @@ import {
   HelpCircle
 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
+import { logger } from '../../lib/logger'
 
 interface DesktopNavProps {
   isMobileView: boolean
@@ -31,16 +32,21 @@ export const DesktopNav: React.FC<DesktopNavProps> = ({ isMobileView }) => {
   } = useAppStore()
 
   const handleExport = () => {
-    const csvData = exportToCSV()
-    const blob = new Blob([csvData], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `fintrack-transactions-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    try {
+      const csvData = exportToCSV()
+      const blob = new Blob([csvData], { type: 'text/csv' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `fintrack-transactions-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      logger.info('Data exported to CSV successfully')
+    } catch (error) {
+      logger.error('Error exporting data to CSV', error)
+    }
   }
 
   const handleImport = () => {
@@ -54,17 +60,32 @@ export const DesktopNav: React.FC<DesktopNavProps> = ({ isMobileView }) => {
         reader.onload = (e) => {
           const content = e.target?.result as string
           if (file.name.endsWith('.csv')) {
-            // Handle CSV import
-            console.log('CSV import:', content)
+            logger.info('CSV file selected for import', { fileName: file.name, size: file.size })
+            // Handle CSV import logic here
           } else if (file.name.endsWith('.json')) {
-            // Handle JSON import
-            console.log('JSON import:', content)
+            logger.info('JSON file selected for import', { fileName: file.name, size: file.size })
+            // Handle JSON import logic here
           }
         }
         reader.readAsText(file)
       }
     }
     input.click()
+  }
+
+  const handleCategories = () => {
+    logger.info('Categories menu clicked')
+    // Add categories functionality here
+  }
+
+  const handleBudgets = () => {
+    logger.info('Budgets menu clicked')
+    // Add budgets functionality here
+  }
+
+  const handleHelp = () => {
+    logger.info('Help menu clicked')
+    // Add help functionality here
   }
 
   if (isMobileView) return null
@@ -117,11 +138,11 @@ export const DesktopNav: React.FC<DesktopNavProps> = ({ isMobileView }) => {
           {/* Utility Actions Section */}
           <div className="pt-4 mt-4 border-t border-border space-y-1">
             {[
-              { icon: <Tags size={20} />, label: "Categories", action: () => console.log('Categories') },
-              { icon: <Target size={20} />, label: "Budgets", action: () => console.log('Budgets') },
+              { icon: <Tags size={20} />, label: "Categories", action: handleCategories },
+              { icon: <Target size={20} />, label: "Budgets", action: handleBudgets },
               { icon: <Download size={20} />, label: "Export", action: handleExport },
               { icon: <Upload size={20} />, label: "Import", action: handleImport },
-              { icon: <HelpCircle size={20} />, label: "Help", action: () => console.log('Help') },
+              { icon: <HelpCircle size={20} />, label: "Help", action: handleHelp },
             ].map((item, idx) => (
               <button
                 key={idx}

@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Toaster } from 'sonner'
 import { useAppStore } from './stores/appStore'
 import { useViewMode } from './hooks/useViewMode'
+import { useLoading } from './hooks/useLoading'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Layout Components
@@ -26,6 +27,10 @@ import { Sidebar } from './components/Sidebar'
 import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt'
 import { UpdatePrompt } from './components/pwa/UpdatePrompt'
 import { OfflineIndicator } from './components/pwa/OfflineIndicator'
+
+// Loading Components
+import { LoadingScreen } from './components/ui/loading-screen'
+import { RefreshScenario } from './components/ui/refresh-scenario'
 
 // Feature Components
 import { FloatingActionButton } from './components/FloatingActionButton'
@@ -62,6 +67,11 @@ function App() {
 
   const { viewMode, setViewMode, isMobileView } = useViewMode()
   const { isOnline } = usePWA()
+  
+  // Loading states
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [showRefresh, setShowRefresh] = useState(false)
+  const loading = useLoading(isInitialLoad)
 
   // Process recurring transactions on mount
   useEffect(() => {
@@ -85,6 +95,52 @@ function App() {
       }
     }
   }, [setShowAdd, setTab])
+
+  // Handle initial loading
+  useEffect(() => {
+    if (isInitialLoad) {
+      const timer = setTimeout(() => {
+        loading.completeLoading()
+        setTimeout(() => {
+          setIsInitialLoad(false)
+        }, 1000)
+      }, 8000) // 8 seconds for full loading experience
+
+      return () => clearTimeout(timer)
+    }
+  }, [isInitialLoad, loading])
+
+  // Handle refresh scenario
+  const handleRefresh = () => {
+    setShowRefresh(true)
+  }
+
+  const handleRefreshComplete = () => {
+    setShowRefresh(false)
+    // Trigger data refresh here
+    window.location.reload()
+  }
+
+  // Show loading screen during initial load
+  if (isInitialLoad) {
+    return (
+      <LoadingScreen 
+        isVisible={loading.isVisible}
+        progress={loading.progress}
+        message={loading.message}
+      />
+    )
+  }
+
+  // Show refresh scenario
+  if (showRefresh) {
+    return (
+      <RefreshScenario 
+        isVisible={showRefresh}
+        onComplete={handleRefreshComplete}
+      />
+    )
+  }
 
   const renderScreen = () => {
     const screenProps = { isMobileView }
@@ -134,6 +190,7 @@ function App() {
             viewMode={viewMode}
             setViewMode={setViewMode}
             showViewToggle={!isMobileView}
+            onRefresh={handleRefresh}
           />
           
           {/* Screen Content */}

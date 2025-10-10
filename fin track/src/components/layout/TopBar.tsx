@@ -1,10 +1,11 @@
 import React from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, RefreshCw } from 'lucide-react'
 import { ViewModeToggle } from '../ViewModeToggle'
 
 interface TopBarProps {
   title: string
   onMenuClick?: () => void
+  onRefresh?: () => void
   viewMode?: 'auto' | 'mobile' | 'desktop'
   setViewMode?: (mode: 'auto' | 'mobile' | 'desktop') => void
   showViewToggle?: boolean
@@ -13,6 +14,7 @@ interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({ 
   title, 
   onMenuClick,
+  onRefresh,
   viewMode,
   setViewMode,
   showViewToggle = false
@@ -32,9 +34,22 @@ export const TopBar: React.FC<TopBarProps> = ({
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
       </div>
       
-      {showViewToggle && viewMode && setViewMode && (
-        <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
-      )}
+      <div className="flex items-center gap-2">
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            className="p-2 rounded-xl hover:bg-muted transition-colors"
+            aria-label="Refresh data"
+            title="Refresh global financial data"
+          >
+            <RefreshCw size={20} className="text-blue-500" />
+          </button>
+        )}
+        
+        {showViewToggle && viewMode && setViewMode && (
+          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+        )}
+      </div>
     </div>
   )
 }

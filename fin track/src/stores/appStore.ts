@@ -105,6 +105,8 @@ interface AppState {
   deleteTransaction: (id: string) => void
   getTransactions: () => Transaction[]
   getFilteredTransactions: () => Transaction[]
+  getTransactionsByCategory: (category: string) => Transaction[]
+  getRecentTransactions: (limit?: number) => Transaction[]
   
   // Financial calculations
   getTotals: () => { totalIncome: number; totalExpense: number; netWorth: number }
@@ -274,6 +276,18 @@ export const useAppStore = create<AppState>()(
           
           return true
         })
+      },
+      
+      getTransactionsByCategory: (category) => {
+        const { transactions } = get()
+        return transactions.filter(t => t.category === category)
+      },
+      
+      getRecentTransactions: (limit = 10) => {
+        const { transactions } = get()
+        return transactions
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, limit)
       },
       
       // Financial calculations

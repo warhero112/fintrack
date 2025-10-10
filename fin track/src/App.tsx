@@ -1,22 +1,33 @@
-import React, { useState, useEffect } from 'react'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import React, { useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { useAppStore } from './stores/appStore'
 import { useViewMode } from './hooks/useViewMode'
+import { ErrorBoundary } from './components/ErrorBoundary'
+
+// Layout Components
+import { TopBar } from './components/layout/TopBar'
+import { BottomNavigation } from './components/layout/BottomNavigation'
+import { DesktopNav } from './components/layout/DesktopNav'
+
+// Screen Components
 import { HomeScreen } from './screens/HomeScreen'
 import { StatsScreen } from './screens/StatsScreen'
+import { CalendarScreen } from './screens/CalendarScreen'
 import { WalletsScreen } from './screens/WalletsScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { AIAdvisorScreen } from './screens/AIAdvisorScreen'
 import { GoalsScreen } from './screens/GoalsScreen'
-import { CalendarScreen } from './screens/CalendarScreen'
-import { BottomNavigation } from './components/layout/BottomNavigation'
-import { DesktopNav } from './components/layout/DesktopNav'
-import { TopBar } from './components/layout/TopBar'
+
+// Modal Components
 import { AddTransactionModal } from './components/modals/AddTransactionModal'
-import { SmartCategorizer } from './components/ai/SmartCategorizer'
-import { BillScanner } from './components/scanning/BillScanner'
 import { Sidebar } from './components/Sidebar'
+
+// PWA Components
+import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt'
+import { UpdatePrompt } from './components/pwa/UpdatePrompt'
+import { OfflineIndicator } from './components/pwa/OfflineIndicator'
+
+// Feature Components
 import { FloatingActionButton } from './components/FloatingActionButton'
 import { TransactionList } from './components/TransactionList'
 import { SearchAndFilter } from './components/SearchAndFilter'
@@ -26,192 +37,154 @@ import { TrendsChart } from './components/analytics/TrendsChart'
 import { BudgetTracker } from './components/BudgetTracker'
 import { RecurringTransactions } from './components/RecurringTransactions'
 
-export default function App() {
-  const {
-    tab,
-    showAdd,
-    showAICategorizer,
-    showBillScanner,
-    setShowAdd,
+// AI Components
+import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
+import { SmartCategorizer } from './components/ai/SmartCategorizer'
+import { BillScanner } from './components/scanning/BillScanner'
+
+// Hooks
+import { usePWA } from './hooks/usePWA'
+
+function App() {
+  const { 
+    tab, 
+    setTab, 
+    showAdd, 
+    setShowAdd, 
+    showAICategorizer, 
     setShowAICategorizer,
+    showBillScanner,
     setShowBillScanner,
-    settings,
-    setSettings,
-    getFilteredTransactions,
-    processRecurringTransactions,
+    editingTransaction,
+    setEditingTransaction,
+    processRecurringTransactions
   } = useAppStore()
 
-  // View mode management
   const { viewMode, setViewMode, isMobileView } = useViewMode()
+  const { isOnline } = usePWA()
 
-  // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [editingTransaction, setEditingTransaction] = useState(null)
-
-  const handleLogin = () => {
-    setIsAuthenticated(true)
-  }
-
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-  }
-
-  // Process recurring transactions on app start
+  // Process recurring transactions on mount
   useEffect(() => {
     processRecurringTransactions()
   }, [processRecurringTransactions])
 
-  // Theme handling
+  // Handle URL parameters for PWA shortcuts
   useEffect(() => {
-    const applyTheme = () => {
-      if (settings.theme === 'system') {
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        document.documentElement.classList.toggle('dark', isDark)
-      } else {
-        document.documentElement.classList.toggle('dark', settings.theme === 'dark')
+    const urlParams = new URLSearchParams(window.location.search)
+    const action = urlParams.get('action')
+    const tabParam = urlParams.get('tab')
+
+    if (action === 'add') {
+      setShowAdd(true)
+    }
+
+    if (tabParam) {
+      const tabIndex = parseInt(tabParam)
+      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 6) {
+        setTab(tabIndex)
       }
     }
-    
-    applyTheme()
-    
-    if (settings.theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      mediaQuery.addEventListener('change', applyTheme)
-      return () => mediaQuery.removeEventListener('change', applyTheme)
-    }
-  }, [settings.theme])
+  }, [setShowAdd, setTab])
 
   const renderScreen = () => {
-    const transactions = getFilteredTransactions()
+    const screenProps = { isMobileView }
     
     switch (tab) {
-      case 0:
-        return <HomeScreen isMobileView={isMobileView} />
-      case 1:
+      case 0: // Home
+        return <HomeScreen {...screenProps} />
+      case 1: // Insights
         return (
-          <div className={isMobileView ? "pb-28" : "pb-8"}>
-            <TopBar 
-              title="Insights" 
-              onMenuClick={() => setSidebarOpen(true)}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              showViewToggle={true}
-            />
-            <div className="px-4 space-y-6">
-              <SearchAndFilter />
-              <TrendsChart />
-              <CategoryChart />
-            </div>
+          <div className="space-y-6">
+            <SearchAndFilter />
+            <TrendsChart />
+            <CategoryChart />
           </div>
         )
-      case 2:
-        return <CalendarScreen isMobileView={isMobileView} />
-      case 3:
+      case 2: // Calendar
+        return <CalendarScreen {...screenProps} />
+      case 3: // Transactions
         return (
-          <div className={isMobileView ? "pb-28" : "pb-8"}>
-            <TopBar 
-              title="Transactions" 
-              onMenuClick={() => setSidebarOpen(true)}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              showViewToggle={true}
-            />
-            <div className="px-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <SearchAndFilter />
-                <ExportImport />
-              </div>
-              <TransactionList 
-                transactions={transactions} 
-                onEdit={setEditingTransaction}
-              />
-            </div>
+          <div className="space-y-6">
+            <SearchAndFilter />
+            <ExportImport />
+            <TransactionList />
           </div>
         )
-      case 4:
+      case 4: // Settings
         return (
-          <div className={isMobileView ? "pb-28" : "pb-8"}>
-            <TopBar 
-              title="Settings" 
-              onMenuClick={() => setSidebarOpen(true)}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              showViewToggle={true}
-            />
-            <div className="px-4 space-y-6">
-              <BudgetTracker />
-              <RecurringTransactions />
-            </div>
+          <div className="space-y-6">
+            <BudgetTracker />
+            <RecurringTransactions />
           </div>
         )
-      case 5:
-        return <AIAdvisorScreen isMobileView={isMobileView} />
-      case 6:
-        return <GoalsScreen isMobileView={isMobileView} />
+      case 5: // AI Advisor
+        return <AIAdvisorScreen {...screenProps} />
+      case 6: // Goals
+        return <GoalsScreen {...screenProps} />
       default:
-        return <HomeScreen isMobileView={isMobileView} />
+        return <HomeScreen {...screenProps} />
     }
   }
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-background text-foreground">
-        {/* Desktop Navigation (conditionally rendered) */}
+      <div className={`min-h-screen bg-background text-foreground ${isMobileView ? 'pb-24' : ''}`}>
+        {/* Desktop Navigation */}
         <DesktopNav isMobileView={isMobileView} />
         
-        {/* Main Content Container */}
-        <div className={`
-          ${!isMobileView ? 'ml-64' : ''} 
-          mx-auto 
-          ${isMobileView ? 'max-w-md' : 'max-w-7xl'} 
-          ${isMobileView ? 'pb-24' : 'pb-8'}
-        `}>
-          {renderScreen()}
+        {/* Main Content */}
+        <div className={`${!isMobileView ? 'ml-64' : ''} transition-all duration-300`}>
+          {/* Top Bar */}
+          <TopBar 
+            title="FinTrack" 
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            showViewToggle={!isMobileView}
+          />
+          
+          {/* Screen Content */}
+          <div className={`${isMobileView ? 'px-4 pb-28' : 'px-6 pb-8'}`}>
+            {renderScreen()}
+          </div>
         </div>
-        
-        {/* Bottom Navigation (conditionally rendered) */}
+
+        {/* Mobile Bottom Navigation */}
         <BottomNavigation isMobileView={isMobileView} />
-        
-        {/* Floating Action Button (only on mobile) */}
-        {isMobileView && <FloatingActionButton />}
-        
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          settings={settings}
-          onSettingsChange={setSettings}
-          isAuthenticated={isAuthenticated}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
+
+        {/* Floating Action Button */}
+        <FloatingActionButton />
+
+        {/* Modals */}
+        <AddTransactionModal 
+          onClose={() => {
+            setShowAdd(false)
+            setEditingTransaction(null)
+          }}
+          editingTransaction={editingTransaction}
         />
-        
-        {showAdd && (
-          <AddTransactionModal
-            onClose={() => setShowAdd(false)}
-            editingTransaction={editingTransaction}
-          />
-        )}
-        
+
+        {/* AI Components */}
         {showAICategorizer && (
-          <SmartCategorizer
-            onClose={() => setShowAICategorizer(false)}
-          />
+          <SmartCategorizer onClose={() => setShowAICategorizer(false)} />
         )}
         
         {showBillScanner && (
-          <BillScanner
-            onClose={() => setShowBillScanner(false)}
-          />
+          <BillScanner onClose={() => setShowBillScanner(false)} />
         )}
-        
-        <Toaster
-          position="top-center"
-          expand={true}
-          richColors={true}
-          closeButton={true}
-        />
+
+        {/* Sidebar */}
+        <Sidebar />
+
+        {/* PWA Components */}
+        <PWAInstallPrompt />
+        <UpdatePrompt />
+        <OfflineIndicator />
+
+        {/* Toast Notifications */}
+        <Toaster position="top-right" />
       </div>
     </ErrorBoundary>
   )
 }
+
+export default App

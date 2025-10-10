@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Toaster } from 'sonner'
 import { useAppStore } from './stores/appStore'
+import { useViewMode } from './hooks/useViewMode'
 import { HomeScreen } from './screens/HomeScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { WalletsScreen } from './screens/WalletsScreen'
@@ -10,6 +11,8 @@ import { AIAdvisorScreen } from './screens/AIAdvisorScreen'
 import { GoalsScreen } from './screens/GoalsScreen'
 import { CalendarScreen } from './screens/CalendarScreen'
 import { BottomNavigation } from './components/layout/BottomNavigation'
+import { DesktopNav } from './components/layout/DesktopNav'
+import { TopBar } from './components/layout/TopBar'
 import { AddTransactionModal } from './components/modals/AddTransactionModal'
 import { SmartCategorizer } from './components/ai/SmartCategorizer'
 import { BillScanner } from './components/scanning/BillScanner'
@@ -37,6 +40,9 @@ export default function App() {
     getFilteredTransactions,
     processRecurringTransactions,
   } = useAppStore()
+
+  // View mode management
+  const { viewMode, setViewMode, isMobileView } = useViewMode()
 
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -81,13 +87,17 @@ export default function App() {
     
     switch (tab) {
       case 0:
-        return <HomeScreen />
+        return <HomeScreen isMobileView={isMobileView} />
       case 1:
         return (
-          <div className="pb-28">
-            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
-              <h1 className="text-lg font-semibold text-foreground text-center">Insights</h1>
-            </div>
+          <div className={isMobileView ? "pb-28" : "pb-8"}>
+            <TopBar 
+              title="Insights" 
+              onMenuClick={() => setSidebarOpen(true)}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              showViewToggle={true}
+            />
             <div className="px-4 space-y-6">
               <SearchAndFilter />
               <TrendsChart />
@@ -96,13 +106,17 @@ export default function App() {
           </div>
         )
       case 2:
-        return <CalendarScreen />
+        return <CalendarScreen isMobileView={isMobileView} />
       case 3:
         return (
-          <div className="pb-28">
-            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
-              <h1 className="text-lg font-semibold text-foreground text-center">Transactions</h1>
-            </div>
+          <div className={isMobileView ? "pb-28" : "pb-8"}>
+            <TopBar 
+              title="Transactions" 
+              onMenuClick={() => setSidebarOpen(true)}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              showViewToggle={true}
+            />
             <div className="px-4 space-y-4">
               <div className="flex justify-between items-center">
                 <SearchAndFilter />
@@ -117,10 +131,14 @@ export default function App() {
         )
       case 4:
         return (
-          <div className="pb-28">
-            <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3">
-              <h1 className="text-lg font-semibold text-foreground text-center">Settings</h1>
-            </div>
+          <div className={isMobileView ? "pb-28" : "pb-8"}>
+            <TopBar 
+              title="Settings" 
+              onMenuClick={() => setSidebarOpen(true)}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              showViewToggle={true}
+            />
             <div className="px-4 space-y-6">
               <BudgetTracker />
               <RecurringTransactions />
@@ -128,21 +146,35 @@ export default function App() {
           </div>
         )
       case 5:
-        return <AIAdvisorScreen />
+        return <AIAdvisorScreen isMobileView={isMobileView} />
       case 6:
-        return <GoalsScreen />
+        return <GoalsScreen isMobileView={isMobileView} />
       default:
-        return <HomeScreen />
+        return <HomeScreen isMobileView={isMobileView} />
     }
   }
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background text-foreground">
-        {renderScreen()}
+        {/* Desktop Navigation (conditionally rendered) */}
+        <DesktopNav isMobileView={isMobileView} />
         
-        <BottomNavigation />
-        <FloatingActionButton />
+        {/* Main Content Container */}
+        <div className={`
+          ${!isMobileView ? 'ml-64' : ''} 
+          mx-auto 
+          ${isMobileView ? 'max-w-md' : 'max-w-7xl'} 
+          ${isMobileView ? 'pb-24' : 'pb-8'}
+        `}>
+          {renderScreen()}
+        </div>
+        
+        {/* Bottom Navigation (conditionally rendered) */}
+        <BottomNavigation isMobileView={isMobileView} />
+        
+        {/* Floating Action Button (only on mobile) */}
+        {isMobileView && <FloatingActionButton />}
         
         <Sidebar
           isOpen={sidebarOpen}

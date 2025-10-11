@@ -1,13 +1,6 @@
 import React from 'react'
 import { Plus, Edit3, Trash2 } from 'lucide-react'
-import { Transaction } from '../../types'
-import { useTransactions } from '../../hooks/useTransactions'
 import { useAppStore } from '../../stores/appStore'
-
-interface RecentTransactionsProps {
-  transactions: Transaction[]
-  currency: string
-}
 
 const formatCurrency = (amount: number, currency: string) => {
   try {
@@ -20,18 +13,30 @@ const formatCurrency = (amount: number, currency: string) => {
   }
 }
 
-export const RecentTransactions: React.FC<RecentTransactionsProps> = ({ 
-  transactions, 
-  currency 
-}) => {
-  const { removeTransaction } = useTransactions()
-  const { setShowAdd } = useAppStore()
+export const RecentTransactions: React.FC = () => {
+  const { 
+    transactions, 
+    settings, 
+    setShowAdd, 
+    deleteTransaction,
+    setEditingTransaction 
+  } = useAppStore()
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
-      removeTransaction(id)
+      deleteTransaction(id)
     }
   }
+
+  const handleEdit = (transaction: any) => {
+    setEditingTransaction(transaction)
+    setShowAdd(true)
+  }
+
+  // Get recent transactions (last 5)
+  const recentTransactions = transactions
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
 
   return (
     <div className="rounded-2xl shadow-sm border border-border bg-card p-4">
@@ -45,12 +50,12 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
         </button>
       </div>
       <div className="divide-y divide-border">
-        {transactions.length === 0 && (
+        {recentTransactions.length === 0 && (
           <div className="text-sm text-muted-foreground py-4 text-center">
             No transactions yet.
           </div>
         )}
-        {transactions.map((transaction) => (
+        {recentTransactions.map((transaction) => (
           <div key={transaction.id} className="py-3 flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               transaction.type === 'income' 
@@ -67,7 +72,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
             </div>
             <div className="flex-1">
               <div className="text-sm font-medium text-foreground">
-                {transaction.label}
+                {transaction.description}
               </div>
               <div className="text-xs text-muted-foreground">
                 {transaction.category} • {transaction.date}
@@ -79,11 +84,11 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
                 : 'text-red-600 dark:text-red-400'
             }`}>
               {transaction.type === 'income' ? '+' : '-'}
-              {formatCurrency(transaction.amount, currency)}
+              {formatCurrency(transaction.amount, settings.currency)}
             </div>
             <button 
               className="ml-2 p-2 rounded-xl hover:bg-muted"
-              onClick={() => {/* TODO: Edit transaction */}}
+              onClick={() => handleEdit(transaction)}
               aria-label="Edit transaction"
             >
               <Edit3 size={16} />

@@ -112,6 +112,7 @@ interface AppState {
   getTotals: () => { totalIncome: number; totalExpense: number; netWorth: number }
   getMonthlyTotals: () => { income: number; expense: number; net: number }
   getCategoryTotals: () => Record<string, { income: number; expense: number; net: number }>
+  getMonthlySeries: (months?: number) => Array<{ month: string; income: number; expense: number; net: number }>
   
   // Goal actions
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => void
@@ -349,6 +350,41 @@ export const useAppStore = create<AppState>()(
         })
         
         return categoryTotals
+      },
+      
+      getMonthlySeries: (months = 6) => {
+        const { transactions } = get()
+        const now = new Date()
+        const series = []
+        
+        for (let i = months - 1; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+          const monthKey = date.toISOString().slice(0, 7) // YYYY-MM format
+          const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          
+          const monthTransactions = transactions.filter(t => {
+            const transactionDate = new Date(t.date)
+            return transactionDate.getMonth() === date.getMonth() && 
+                   transactionDate.getFullYear() === date.getFullYear()
+          })
+          
+          const income = monthTransactions
+            .filter(t => t.type === 'income')
+            .reduce((sum, t) => sum + t.amount, 0)
+          const expense = monthTransactions
+            .filter(t => t.type === 'expense')
+            .reduce((sum, t) => sum + t.amount, 0)
+          const net = income - expense
+          
+          series.push({
+            month: monthName,
+            income,
+            expense,
+            net
+          })
+        }
+        
+        return series
       },
       
       // Goal actions

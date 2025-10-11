@@ -33,8 +33,11 @@ export const RecentTransactions: React.FC = () => {
     setShowAdd(true)
   }
 
+  // Safety check: ensure transactions is an array
+  const safeTransactions = transactions || []
+  
   // Get recent transactions (last 5)
-  const recentTransactions = transactions
+  const recentTransactions = safeTransactions
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5)
 
@@ -84,7 +87,7 @@ export const RecentTransactions: React.FC = () => {
                 : 'text-red-600 dark:text-red-400'
             }`}>
               {transaction.type === 'income' ? '+' : '-'}
-              {formatCurrency(transaction.amount, settings.currency)}
+              {formatCurrency(transaction.amount, settings?.currency || 'USD')}
             </div>
             <button 
               className="ml-2 p-2 rounded-xl hover:bg-muted"

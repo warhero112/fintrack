@@ -17,50 +17,61 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefresh 
 }) => {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-slate-800 flex items-center justify-center">
-              <div className="w-6 h-6 text-white">💰</div>
-            </div>
-            <div>
-              <h1 className="text-slate-900">{title}</h1>
-              <p className="text-slate-600 text-xs">Personal Finance Manager</p>
-            </div>
-          </div>
+    <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="flex items-center justify-between">
+        {/* Left side */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Refresh Button */}
+          {onRefresh && (
             <button
               onClick={onRefresh}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-all"
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Refresh"
             >
-              <RefreshCw className="w-5 h-5 text-slate-600" />
+              <RefreshCw className="w-5 h-5 text-gray-600" />
             </button>
-            
-            {showViewToggle && viewMode && setViewMode && (
+          )}
+
+          {/* View Mode Toggle */}
+          {showViewToggle && viewMode && setViewMode && (
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setViewMode(viewMode === 'mobile' ? 'desktop' : 'mobile')}
-                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-all"
+                onClick={() => setViewMode('mobile')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  viewMode === 'mobile' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
-                {viewMode === 'mobile' ? (
-                  <Smartphone className="w-5 h-5 text-slate-600" />
-                ) : (
-                  <Monitor className="w-5 h-5 text-slate-600" />
-                )}
+                Mobile
               </button>
-            )}
+              <button
+                onClick={() => setViewMode('desktop')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  viewMode === 'desktop' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Desktop
+              </button>
+            </div>
+          )}
 
-            <button className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-all">
-              <Bell className="w-5 h-5 text-slate-600" />
-            </button>
+          {/* Notifications */}
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Bell className="w-5 h-5 text-gray-600" />
+          </button>
 
-            <button className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-all">
-              <Settings className="w-5 h-5 text-slate-600" />
-            </button>
-          </div>
+          {/* Settings Button */}
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Settings className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
       </div>
     </div>

@@ -21,28 +21,28 @@ export const BalanceCards: React.FC = () => {
 
   const cards = [
     {
-      title: 'Net Worth',
+      title: 'Balance',
       amount: totals.netWorth,
-      color: 'slate-700',
-      bgColor: 'bg-slate-100',
+      color: 'blue-600',
+      bgColor: 'bg-blue-50',
       icon: DollarSign,
-      change: '+12.5%'
+      change: '+2.5% from last month'
     },
     {
-      title: 'Total Income',
+      title: 'Income',
       amount: totals.totalIncome,
-      color: 'emerald-700',
-      bgColor: 'bg-emerald-50',
+      color: 'green-600',
+      bgColor: 'bg-green-50',
       icon: ArrowUpRight,
-      change: '+8.2%'
+      change: '+12% from last month'
     },
     {
-      title: 'Total Expenses',
+      title: 'Expenses',
       amount: totals.totalExpense,
-      color: 'rose-700',
-      bgColor: 'bg-rose-50',
+      color: 'red-600',
+      bgColor: 'bg-red-50',
       icon: ArrowDownRight,
-      change: '-3.1%'
+      change: '-5% from last month'
     }
   ]
 
@@ -53,29 +53,29 @@ export const BalanceCards: React.FC = () => {
         return (
           <div
             key={index}
-            className={`rounded-2xl ${card.bgColor} p-6 border border-slate-200 hover:shadow-md transition-all`}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
           >
-            {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <p className="text-slate-600 text-sm">{card.title}</p>
-              <div className={`w-10 h-10 rounded-xl bg-${card.color} flex items-center justify-center`}>
-                <Icon className="w-5 h-5 text-white" />
+              <div className={`p-3 rounded-xl ${card.bgColor}`}>
+                <Icon className={`w-6 h-6 ${card.color.replace('600', '600')}`} />
+              </div>
+              <div className="text-right">
+                <div className={`text-xs font-medium ${card.color} ${card.bgColor} px-2 py-1 rounded-full`}>
+                  {card.title}
+                </div>
               </div>
             </div>
-
-            {/* Amount */}
-            <div className="mb-2">
-              <h2 className={`text-${card.color}`}>
-                {formatCurrency(card.amount, currency)}
-              </h2>
+            <div className={`text-3xl font-bold text-gray-900 mb-1`}>
+              {formatCurrency(card.amount, currency)}
             </div>
-
-            {/* Change indicator */}
-            <div className="flex items-center gap-2">
-              <span className={`text-sm ${card.change.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <div className="text-sm text-gray-500">
+              {card.title === 'Balance' ? 'Net Worth' : `Total ${card.title}`}
+            </div>
+            <div className="flex items-center gap-1 mt-2">
+              <ArrowUpRight className={`w-4 h-4 ${card.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`} />
+              <span className={`text-sm font-medium ${card.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
                 {card.change}
               </span>
-              <span className="text-slate-500 text-xs">vs last month</span>
             </div>
           </div>
         );

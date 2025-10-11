@@ -22,45 +22,29 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ isMobileView
   if (!isMobileView) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-bottom">
-      <div className="max-w-md mx-auto px-1 py-1.5">
-        <div className="flex items-center justify-between">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = tab === item.id;
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => setTab(item.id)}
-                className="flex flex-col items-center gap-0.5 px-1 py-1.5 min-w-0 flex-1"
-              >
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                    isActive
-                      ? 'bg-slate-800'
-                      : 'bg-transparent'
-                  }`}
-                >
-                  <Icon
-                    className={`w-5 h-5 ${
-                      isActive ? 'text-white' : 'text-slate-600'
-                    }`}
-                  />
-                </div>
-                <span
-                  className={`text-[10px] leading-tight truncate max-w-full transition-all ${
-                    isActive
-                      ? 'text-slate-900'
-                      : 'text-slate-500'
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+      <div className="flex justify-around">
+        {navigationItems.map((item) => {
+          const Icon = item.icon
+          const isActive = tab === item.id
+          
+          return (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
+                isActive 
+                  ? 'text-blue-600 bg-gray-50' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Icon className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
+              <span className={`text-xs font-medium ${isActive ? 'font-semibold' : ''}`}>
+                {item.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

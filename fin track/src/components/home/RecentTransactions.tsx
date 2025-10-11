@@ -39,86 +39,90 @@ export const RecentTransactions: React.FC = () => {
     .slice(0, 5)
 
   return (
-    <div className="rounded-2xl bg-white p-8 border border-slate-200">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-slate-900">Recent Transactions</h3>
-        <button
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+          <p className="text-sm text-gray-500">Your latest financial activity</p>
+        </div>
+        <button 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-medium"
           onClick={() => setShowAdd(true)}
-          className="px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700 transition-all"
         >
-          <Plus className="w-4 h-4 inline mr-1" />
-          Add
+          <Plus className="w-4 h-4" />
+          Add New
         </button>
       </div>
 
       <div className="space-y-3">
         {recentTransactions.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <Plus className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-slate-600 mb-4">No transactions yet</p>
-            <button
-              onClick={() => setShowAdd(true)}
-              className="px-6 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-all"
-            >
-              Add First Transaction
-            </button>
+            <p className="text-gray-500 mb-2">No transactions yet</p>
+            <p className="text-sm text-gray-400">Add your first transaction to get started</p>
           </div>
         )}
         
         {recentTransactions.map((transaction) => {
           const isIncome = transaction.type === 'income';
-          const bgColor = isIncome ? 'bg-emerald-100' : 'bg-rose-100';
-          const iconColor = isIncome ? 'text-emerald-700' : 'text-rose-700';
 
           return (
-            <div
-              key={transaction.id}
-              className="relative rounded-2xl bg-slate-50 p-4 hover:shadow-md transition-all group"
-            >
-              <div className="flex items-center gap-4">
-                {/* Icon */}
-                <div className={`w-16 h-16 rounded-2xl ${bgColor} flex items-center justify-center flex-shrink-0`}>
-                  {isIncome ? (
-                    <ArrowUpRight className={`w-8 h-8 ${iconColor}`} />
-                  ) : (
-                    <ArrowDownRight className={`w-8 h-8 ${iconColor}`} />
-                  )}
+            <div key={transaction.id} className="group flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
+              {/* Icon */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                isIncome 
+                  ? 'bg-green-100' 
+                  : 'bg-red-100'
+              }`}>
+                {isIncome ? (
+                  <ArrowUpRight className="w-5 h-5 text-green-600" />
+                ) : (
+                  <ArrowDownRight className="w-5 h-5 text-red-600" />
+                )}
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-900 truncate">
+                  {transaction.description}
                 </div>
-
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="text-slate-900 truncate">{transaction.description}</h4>
-                    <span className={`${isIncome ? 'text-emerald-600' : 'text-rose-600'} whitespace-nowrap`}>
-                      {isIncome ? '+' : '-'}{formatCurrency(transaction.amount, settings?.currency || 'USD')}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-sm">{transaction.date}</span>
-                    <span className="text-slate-400">•</span>
-                    <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-slate-200 text-slate-700">
-                      {transaction.category}
-                    </span>
-                  </div>
+                <div className="text-sm text-gray-500 flex items-center gap-2">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    {transaction.category}
+                  </span>
+                  <span>•</span>
+                  <span>{transaction.date}</span>
                 </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEdit(transaction)}
-                    className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(transaction.id)}
-                    className="p-2 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+              </div>
+              
+              {/* Amount */}
+              <div className={`font-semibold text-lg ${
+                isIncome 
+                  ? 'text-green-600' 
+                  : 'text-red-600'
+              }`}>
+                {isIncome ? '+' : '-'}
+                {formatCurrency(transaction.amount, settings?.currency || 'USD')}
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={() => handleEdit(transaction)}
+                  aria-label="Edit transaction"
+                >
+                  <Edit3 className="w-4 h-4 text-gray-600" />
+                </button>
+                <button 
+                  className="p-2 rounded-lg hover:bg-red-100 transition-colors"
+                  onClick={() => handleDelete(transaction.id)}
+                  aria-label="Delete transaction"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                </button>
               </div>
             </div>
           );

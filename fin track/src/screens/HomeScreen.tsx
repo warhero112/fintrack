@@ -1,31 +1,111 @@
 import React from 'react'
-import { Menu } from 'lucide-react'
-import { useAppStore } from '../stores/appStore'
-import { TopBar } from '../components/layout/TopBar'
 import { BalanceCards } from '../components/home/BalanceCards'
-import { QuickActions } from '../components/home/QuickActions'
-import { MonthlyChart } from '../components/home/MonthlyChart'
 import { RecentTransactions } from '../components/home/RecentTransactions'
+import { CategoryChart } from '../components/analytics/CategoryChart'
+import { TrendsChart } from '../components/analytics/TrendsChart'
+import { BudgetTracker } from '../components/BudgetTracker'
+import { Plus, TrendingUp, DollarSign, Calendar, Target } from 'lucide-react'
+import { useAppStore } from '../stores/appStore'
 
 interface HomeScreenProps {
   isMobileView: boolean
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
-  const { setSidebarOpen } = useAppStore()
+  const { setShowAdd, getMonthlyTotals, getCategoryTotals } = useAppStore()
+  
+  const monthlyTotals = getMonthlyTotals()
+  const categoryTotals = getCategoryTotals()
+
+  const quickActions = [
+    {
+      title: 'Add Transaction',
+      icon: Plus,
+      color: 'bg-blue-500',
+      onClick: () => setShowAdd(true)
+    },
+    {
+      title: 'View Calendar',
+      icon: Calendar,
+      color: 'bg-green-500',
+      onClick: () => {}
+    },
+    {
+      title: 'Set Goals',
+      icon: Target,
+      color: 'bg-purple-500',
+      onClick: () => {}
+    },
+    {
+      title: 'View Insights',
+      icon: TrendingUp,
+      color: 'bg-orange-500',
+      onClick: () => {}
+    }
+  ]
 
   return (
-    <div className={isMobileView ? "pb-28" : "pb-8"}>
-      <TopBar 
-        title="FinTrack" 
-        onMenuClick={() => setSidebarOpen(true)}
-      />
-      
-      <div className="px-4 space-y-6">
-        <BalanceCards />
-        <QuickActions />
-        <MonthlyChart />
-        <RecentTransactions />
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back!</h1>
+            <p className="text-gray-600">Here's your financial overview</p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">This month</div>
+            <div className="text-2xl font-bold text-gray-900">
+              ${monthlyTotals.net.toFixed(2)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Balance Cards */}
+      <BalanceCards />
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {quickActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.onClick}
+              className="flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-colors group"
+            >
+              <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                <action.icon className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">{action.title}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Spending by Category</h2>
+          <CategoryChart />
+        </div>
+
+        {/* Trends Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trends</h2>
+          <TrendsChart />
+        </div>
+      </div>
+
+      {/* Recent Transactions */}
+      <RecentTransactions />
+
+      {/* Budget Overview */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Budget Overview</h2>
+        <BudgetTracker />
       </div>
     </div>
   )

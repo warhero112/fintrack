@@ -96,15 +96,15 @@ function App() {
     }
   }, [setShowAdd, setTab])
 
-  // Handle initial loading
+  // Handle initial loading - reduced to 1 second
   useEffect(() => {
     if (isInitialLoad) {
       const timer = setTimeout(() => {
         loading.completeLoading()
         setTimeout(() => {
           setIsInitialLoad(false)
-        }, 1000)
-      }, 2000) // Reduced to 2 seconds
+        }, 500)
+      }, 1000) // Reduced to 1 second
 
       return () => clearTimeout(timer)
     }
@@ -113,12 +113,11 @@ function App() {
   // Handle refresh scenario
   const handleRefresh = () => {
     setShowRefresh(true)
-  }
-
-  const handleRefreshComplete = () => {
-    setShowRefresh(false)
-    // Trigger data refresh here
-    window.location.reload()
+    // Clear any UI state that might cause remnants
+    setTimeout(() => {
+      setShowRefresh(false)
+      window.location.reload()
+    }, 1000)
   }
 
   // Show loading screen during initial load
@@ -137,7 +136,7 @@ function App() {
     return (
       <RefreshScenario
         isVisible={showRefresh}
-        onComplete={handleRefreshComplete}
+        onComplete={() => setShowRefresh(false)}
       />
     )
   }
@@ -178,9 +177,9 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen bg-black text-white ${isMobileView ? 'pb-24' : ''}`}>
+      <div className={`min-h-screen bg-gray-50 text-gray-900 ${isMobileView ? 'pb-20' : ''}`}>
         {/* Desktop Navigation */}
-        <DesktopNav isMobileView={isMobileView} />
+        {!isMobileView && <DesktopNav isMobileView={isMobileView} />}
 
         {/* Main Content */}
         <div className={`${!isMobileView ? 'ml-64' : ''} transition-all duration-300`}>
@@ -194,13 +193,13 @@ function App() {
           />
 
           {/* Screen Content */}
-          <div className={`${isMobileView ? 'px-4 pb-28' : 'px-6 pb-8'}`}>
+          <div className={`${isMobileView ? 'px-4 pb-24' : 'px-6 pb-8'}`}>
             {renderScreen()}
           </div>
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <BottomNavigation isMobileView={isMobileView} />
+        {isMobileView && <BottomNavigation isMobileView={isMobileView} />}
 
         {/* Floating Action Button */}
         <FloatingActionButton />

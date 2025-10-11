@@ -1,54 +1,73 @@
 import React from 'react'
-import { Menu, RefreshCw } from 'lucide-react'
-import { ViewModeToggle } from '../ViewModeToggle'
+import { RefreshCw, Settings, Menu } from 'lucide-react'
 
 interface TopBarProps {
   title: string
-  onMenuClick?: () => void
-  onRefresh?: () => void
-  viewMode?: 'auto' | 'mobile' | 'desktop'
-  setViewMode?: (mode: 'auto' | 'mobile' | 'desktop') => void
+  viewMode?: string
+  setViewMode?: (mode: string) => void
   showViewToggle?: boolean
+  onRefresh?: () => void
 }
 
 export const TopBar: React.FC<TopBarProps> = ({ 
   title, 
-  onMenuClick,
-  onRefresh,
-  viewMode,
-  setViewMode,
-  showViewToggle = false
+  viewMode, 
+  setViewMode, 
+  showViewToggle = false,
+  onRefresh 
 }) => {
   return (
-    <div className="sticky top-0 z-10 bg-background rounded-2xl shadow-sm border border-border bg-card px-4 py-3 mb-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {onMenuClick && (
-          <button
-            onClick={onMenuClick}
-            className="p-2 rounded-xl hover:bg-muted"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
+    <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="flex items-center justify-between">
+        {/* Left side */}
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+        </div>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Refresh Button */}
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className="w-5 h-5 text-gray-600" />
+            </button>
+          )}
+
+          {/* View Mode Toggle */}
+          {showViewToggle && viewMode && setViewMode && (
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('mobile')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  viewMode === 'mobile' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Mobile
+              </button>
+              <button
+                onClick={() => setViewMode('desktop')}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  viewMode === 'desktop' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Desktop
+              </button>
+            </div>
+          )}
+
+          {/* Settings Button */}
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <Settings className="w-5 h-5 text-gray-600" />
           </button>
-        )}
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="p-2 rounded-xl hover:bg-muted transition-colors"
-            aria-label="Refresh data"
-            title="Refresh global financial data"
-          >
-            <RefreshCw size={20} className="text-blue-500" />
-          </button>
-        )}
-        
-        {showViewToggle && viewMode && setViewMode && (
-          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
-        )}
+        </div>
       </div>
     </div>
   )

@@ -104,7 +104,7 @@ function App() {
         setTimeout(() => {
           setIsInitialLoad(false)
         }, 200)
-      }, 500) // Reduced to 0.5 seconds
+      }, 500)
 
       return () => clearTimeout(timer)
     }
@@ -176,7 +176,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-900 ${isMobileView ? 'pb-20' : ''}`}>
+      <div className={`min-h-screen bg-gray-50 text-gray-900 ${isMobileView ? 'pb-20' : ''}`}>
         {/* Desktop Navigation */}
         {!isMobileView && <DesktopNav isMobileView={isMobileView} />}
 

@@ -16,14 +16,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
   
   const monthlyTotals = getMonthlyTotals()
   const categoryTotals = getCategoryTotals()
-  
+
   // Convert categoryTotals object to array for display
   const categoryTotalsArray = Object.entries(categoryTotals).map(([category, data]) => ({
     category,
     amount: data.expense, // Use expense for spending display
     percentage: 0 // Will be calculated below
   }))
-  
+
   // Calculate percentages
   const totalExpenses = categoryTotalsArray.reduce((sum, cat) => sum + cat.amount, 0)
   const categoryTotalsWithPercentages = categoryTotalsArray.map(cat => ({

@@ -16,6 +16,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
   
   const monthlyTotals = getMonthlyTotals()
   const categoryTotals = getCategoryTotals()
+  
+  // Convert categoryTotals object to array for display
+  const categoryTotalsArray = Object.entries(categoryTotals).map(([category, data]) => ({
+    category,
+    amount: data.expense, // Use expense for spending display
+    percentage: 0 // Will be calculated below
+  }))
+  
+  // Calculate percentages
+  const totalExpenses = categoryTotalsArray.reduce((sum, cat) => sum + cat.amount, 0)
+  const categoryTotalsWithPercentages = categoryTotalsArray.map(cat => ({
+    ...cat,
+    percentage: totalExpenses > 0 ? (cat.amount / totalExpenses) * 100 : 0
+  })).sort((a, b) => b.amount - a.amount)
 
   const quickActions = [
     {
@@ -117,7 +131,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
           </div>
           
           <div className="space-y-3">
-            {categoryTotals.slice(0, 5).map((cat, index) => (
+            {categoryTotalsWithPercentages.slice(0, 5).map((cat, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-900">{cat.category}</span>
@@ -131,7 +145,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
                 </div>
               </div>
             ))}
-            {categoryTotals.length === 0 && (
+            {categoryTotalsWithPercentages.length === 0 && (
               <p className="text-slate-500 text-center py-8">No spending data yet</p>
             )}
           </div>

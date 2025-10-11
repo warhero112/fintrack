@@ -96,15 +96,15 @@ function App() {
     }
   }, [setShowAdd, setTab])
 
-  // Handle initial loading - reduced to 1 second
+  // Handle initial loading - instant
   useEffect(() => {
     if (isInitialLoad) {
       const timer = setTimeout(() => {
         loading.completeLoading()
         setTimeout(() => {
           setIsInitialLoad(false)
-        }, 500)
-      }, 1000) // Reduced to 1 second
+        }, 200)
+      }, 500) // Reduced to 0.5 seconds
 
       return () => clearTimeout(timer)
     }
@@ -113,11 +113,10 @@ function App() {
   // Handle refresh scenario
   const handleRefresh = () => {
     setShowRefresh(true)
-    // Clear any UI state that might cause remnants
     setTimeout(() => {
       setShowRefresh(false)
       window.location.reload()
-    }, 1000)
+    }, 500)
   }
 
   // Show loading screen during initial load
@@ -177,7 +176,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen bg-gray-50 text-gray-900 ${isMobileView ? 'pb-20' : ''}`}>
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-slate-900 ${isMobileView ? 'pb-20' : ''}`}>
         {/* Desktop Navigation */}
         {!isMobileView && <DesktopNav isMobileView={isMobileView} />}
 

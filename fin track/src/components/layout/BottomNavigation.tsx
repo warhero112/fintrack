@@ -22,30 +22,34 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({ isMobileView
   if (!isMobileView) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
-      <div className="flex justify-around">
-        {navigationItems.map((item) => {
-          const Icon = item.icon
-          const isActive = tab === item.id
-          
-          return (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 ${
-                isActive 
-                  ? 'text-blue-600 bg-gray-50' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Icon className={`w-5 h-5 mb-1 ${isActive ? 'scale-110' : ''} transition-transform`} />
-              <span className={`text-xs font-medium ${isActive ? 'font-semibold' : ''}`}>
-                {item.label}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+    <div className="flex gap-2 border-t border-[#f0f2f4] bg-white px-4 pb-3 pt-2">
+      {navigationItems.map((item) => {
+        const Icon = item.icon
+        const isActive = tab === item.id
+        
+        return (
+          <a 
+            key={item.id}
+            onClick={() => setTab(item.id)}
+            className={`just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#111418] ${
+              isActive ? 'text-[#111418]' : 'text-[#617589]'
+            }`}
+            href="#"
+          >
+            <div className={`text-[#111418] flex h-8 items-center justify-center ${
+              isActive ? 'text-[#111418]' : 'text-[#617589]'
+            }`} data-icon="House" data-size="24px" data-weight="fill">
+              <Icon className="w-6 h-6" />
+            </div>
+            <p className={`text-xs font-medium leading-normal tracking-[0.015em] ${
+              isActive ? 'text-[#111418]' : 'text-[#617589]'
+            }`}>
+              {item.label}
+            </p>
+          </a>
+        )
+      })}
+      <div className="h-5 bg-white"></div>
     </div>
   )
 }

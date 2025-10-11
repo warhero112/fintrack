@@ -67,7 +67,7 @@ function App() {
 
   const { viewMode, setViewMode, isMobileView } = useViewMode()
   const { isOnline } = usePWA()
-  
+
   // Loading states
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [showRefresh, setShowRefresh] = useState(false)
@@ -104,7 +104,7 @@ function App() {
         setTimeout(() => {
           setIsInitialLoad(false)
         }, 1000)
-      }, 8000) // 8 seconds for full loading experience
+      }, 3000) // Reduced to 3 seconds for better UX
 
       return () => clearTimeout(timer)
     }
@@ -124,7 +124,7 @@ function App() {
   // Show loading screen during initial load
   if (isInitialLoad) {
     return (
-      <LoadingScreen 
+      <LoadingScreen
         isVisible={loading.isVisible}
         progress={loading.progress}
         message={loading.message}
@@ -135,7 +135,7 @@ function App() {
   // Show refresh scenario
   if (showRefresh) {
     return (
-      <RefreshScenario 
+      <RefreshScenario
         isVisible={showRefresh}
         onComplete={handleRefreshComplete}
       />
@@ -144,7 +144,7 @@ function App() {
 
   const renderScreen = () => {
     const screenProps = { isMobileView }
-    
+
     switch (tab) {
       case 0: // Home
         return <HomeScreen {...screenProps} />
@@ -178,21 +178,21 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen bg-background text-foreground ${isMobileView ? 'pb-24' : ''}`}>
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900 text-foreground ${isMobileView ? 'pb-24' : ''}`}>
         {/* Desktop Navigation */}
         <DesktopNav isMobileView={isMobileView} />
-        
+
         {/* Main Content */}
         <div className={`${!isMobileView ? 'ml-64' : ''} transition-all duration-300`}>
           {/* Top Bar */}
-          <TopBar 
-            title="FinTrack" 
+          <TopBar
+            title="FinTrack"
             viewMode={viewMode}
             setViewMode={setViewMode}
             showViewToggle={!isMobileView}
             onRefresh={handleRefresh}
           />
-          
+
           {/* Screen Content */}
           <div className={`${isMobileView ? 'px-4 pb-28' : 'px-6 pb-8'}`}>
             {renderScreen()}
@@ -205,20 +205,22 @@ function App() {
         {/* Floating Action Button */}
         <FloatingActionButton />
 
-        {/* Modals */}
-        <AddTransactionModal 
-          onClose={() => {
-            setShowAdd(false)
-            setEditingTransaction(null)
-          }}
-          editingTransaction={editingTransaction}
-        />
+        {/* Modals - Only render when needed */}
+        {showAdd && (
+          <AddTransactionModal 
+            onClose={() => {
+              setShowAdd(false)
+              setEditingTransaction(null)
+            }}
+            editingTransaction={editingTransaction}
+          />
+        )}
 
         {/* AI Components */}
         {showAICategorizer && (
           <SmartCategorizer onClose={() => setShowAICategorizer(false)} />
         )}
-        
+
         {showBillScanner && (
           <BillScanner onClose={() => setShowBillScanner(false)} />
         )}

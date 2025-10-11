@@ -19,79 +19,67 @@ export const BalanceCards: React.FC = () => {
   const totals = getTotals()
   const currency = settings?.currency || 'USD'
 
+  const cards = [
+    {
+      title: 'Net Worth',
+      amount: totals.netWorth,
+      color: 'slate-700',
+      bgColor: 'bg-slate-100',
+      icon: DollarSign,
+      change: '+12.5%'
+    },
+    {
+      title: 'Total Income',
+      amount: totals.totalIncome,
+      color: 'emerald-700',
+      bgColor: 'bg-emerald-50',
+      icon: ArrowUpRight,
+      change: '+8.2%'
+    },
+    {
+      title: 'Total Expenses',
+      amount: totals.totalExpense,
+      color: 'rose-700',
+      bgColor: 'bg-rose-50',
+      icon: ArrowDownRight,
+      change: '-3.1%'
+    }
+  ]
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Balance Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 rounded-xl bg-blue-50">
-            <DollarSign className="w-6 h-6 text-blue-600" />
-          </div>
-          <div className="text-right">
-            <div className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-              Balance
+      {cards.map((card, index) => {
+        const Icon = card.icon;
+        return (
+          <div
+            key={index}
+            className={`rounded-2xl ${card.bgColor} p-6 border border-slate-200 hover:shadow-md transition-all`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-slate-600 text-sm">{card.title}</p>
+              <div className={`w-10 h-10 rounded-xl bg-${card.color} flex items-center justify-center`}>
+                <Icon className="w-5 h-5 text-white" />
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="text-3xl font-bold text-gray-900 mb-1">
-          {formatCurrency(totals.netWorth, currency)}
-        </div>
-        <div className="text-sm text-gray-500">
-          Net Worth
-        </div>
-        <div className="flex items-center gap-1 mt-2">
-          <ArrowUpRight className="w-4 h-4 text-green-500" />
-          <span className="text-sm text-green-600 font-medium">+2.5% from last month</span>
-        </div>
-      </div>
 
-      {/* Income Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 rounded-xl bg-green-50">
-            <TrendingUp className="w-6 h-6 text-green-600" />
-          </div>
-          <div className="text-right">
-            <div className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-              Income
+            {/* Amount */}
+            <div className="mb-2">
+              <h2 className={`text-${card.color}`}>
+                {formatCurrency(card.amount, currency)}
+              </h2>
             </div>
-          </div>
-        </div>
-        <div className="text-3xl font-bold text-gray-900 mb-1">
-          {formatCurrency(totals.totalIncome, currency)}
-        </div>
-        <div className="text-sm text-gray-500">
-          Total Income
-        </div>
-        <div className="flex items-center gap-1 mt-2">
-          <ArrowUpRight className="w-4 h-4 text-green-500" />
-          <span className="text-sm text-green-600 font-medium">+12% from last month</span>
-        </div>
-      </div>
 
-      {/* Expenses Card */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="p-3 rounded-xl bg-red-50">
-            <TrendingDown className="w-6 h-6 text-red-600" />
-          </div>
-          <div className="text-right">
-            <div className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
-              Expenses
+            {/* Change indicator */}
+            <div className="flex items-center gap-2">
+              <span className={`text-sm ${card.change.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {card.change}
+              </span>
+              <span className="text-slate-500 text-xs">vs last month</span>
             </div>
           </div>
-        </div>
-        <div className="text-3xl font-bold text-gray-900 mb-1">
-          {formatCurrency(totals.totalExpense, currency)}
-        </div>
-        <div className="text-sm text-gray-500">
-          Total Expenses
-        </div>
-        <div className="flex items-center gap-1 mt-2">
-          <ArrowDownRight className="w-4 h-4 text-red-500" />
-          <span className="text-sm text-red-600 font-medium">-5% from last month</span>
-        </div>
-      </div>
+        );
+      })}
     </div>
   )
 }

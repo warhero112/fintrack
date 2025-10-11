@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Send, Bot, ArrowLeft, Sparkles } from 'lucide-react'
+import { Bot, Send, Sparkles } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 
 interface AIAdvisorScreenProps {
@@ -11,162 +11,194 @@ export const AIAdvisorScreen: React.FC<AIAdvisorScreenProps> = ({ isMobileView }
   const [messages, setMessages] = useState([
     {
       id: 1,
-      type: 'ai',
-      content: "Hi! I'm your AI financial advisor. How can I help you with your finances today?",
+      text: "Hello! I'm your AI Financial Advisor. I can help you understand your spending patterns, set financial goals, and provide personalized advice. How can I assist you today?",
+      sender: 'ai' as const,
       timestamp: new Date()
     }
   ])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
-  const { getTotals, getMonthlyTotals, getCategoryTotals } = useAppStore()
+  const { getTotals, transactions, goals, budgets } = useAppStore()
 
   const quickQuestions = [
-    "How can I save more money?",
-    "What's my net worth?",
-    "How can I improve my credit score?",
-    "Should I invest in stocks?",
-    "How much should I save for retirement?",
-    "What's a good budget breakdown?"
+    "How's my spending this month?",
+    "Am I on track with my budget?",
+    "What are my biggest expenses?",
+    "How can I save more?",
+    "Review my financial goals",
+    "Give me a spending report"
   ]
 
-  const handleSendMessage = async () => {
-    if (!message.trim()) return
+  const generateAIResponse = (userMessage: string): string => {
+    const totals = getTotals()
+    const lowerMessage = userMessage.toLowerCase()
+
+    if (lowerMessage.includes('spending') || lowerMessage.includes('expenses')) {
+      const categoryTotals = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => {
+          acc[t.category] = (acc[t.category] || 0) + t.amount
+          return acc
+        }, {} as Record<string, number>)
+      
+      const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]
+      
+      return `Based on your transaction history, you've spent $${totals.totalExpense.toLocaleString()} in total. Your largest expense category is ${topCategory?.[0] || 'N/A'} at $${topCategory?.[1]?.toLocaleString() || 0}. Consider reviewing this category for potential savings.`
+    }
+
+    if (lowerMessage.includes('budget')) {
+      const overBudget = budgets.filter(b => b.spent > b.limit)
+      if (overBudget.length > 0) {
+        return `You're currently over budget in ${overBudget.length} ${overBudget.length === 1 ? 'category' : 'categories'}: ${overBudget.map(b => b.category).join(', ')}. I recommend reviewing these expenses and adjusting your spending habits.`
+      }
+      return `Great news! You're staying within your budget limits across all categories. Keep up the good work!`
+    }
+
+    if (lowerMessage.includes('save') || lowerMessage.includes('saving')) {
+      const savingsRate = totals.totalIncome > 0 ? ((totals.totalIncome - totals.totalExpense) / totals.totalIncome * 100).toFixed(1) : 0
+      return `You're currently saving ${savingsRate}% of your income. Financial experts recommend saving at least 20% of your income. Consider cutting back on non-essential expenses or finding ways to increase your income.`
+    }
+
+    if (lowerMessage.includes('goal')) {
+      if (goals.length === 0) {
+        return `You haven't set any financial goals yet. Setting clear, measurable goals is a great way to stay motivated and track your progress. Would you like help setting up your first goal?`
+      }
+      const goalProgress = goals.map(g => `${g.name}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% complete`).join(', ')
+      return `Here's your goal progress: ${goalProgress}. Keep up the momentum!`
+    }
+
+    if (lowerMessage.includes('report') || lowerMessage.includes('summary')) {
+      return `Financial Summary:\n💰 Total Income: $${totals.totalIncome.toLocaleString()}\n💸 Total Expenses: $${totals.totalExpense.toLocaleString()}\n📊 Net Worth: $${totals.netWorth.toLocaleString()}\n📈 Transactions: ${transactions.length}\n🎯 Active Goals: ${goals.length}\n\nYou're ${totals.netWorth >= 0 ? 'in good financial shape' : 'spending more than earning'}. ${totals.netWorth < 0 ? 'Consider reviewing your expenses.' : 'Keep up the good work!'}`
+    }
+
+    return `That's a great question! Based on your financial data, I see you have ${transactions.length} transactions, with a net worth of $${totals.netWorth.toLocaleString()}. Is there anything specific you'd like to know about your finances?`
+  }
+
+  const handleSend = (messageText?: string) => {
+    const textToSend = messageText || message
+    if (!textToSend.trim()) return
 
     const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: message,
+      id: Date.now().toString(),
+      text: textToSend,
+      sender: 'user' as const,
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage])
     setMessage('')
-    setIsLoading(true)
+    setIsTyping(true)
 
-    // Simulate AI response
     setTimeout(() => {
       const aiResponse = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: generateAIResponse(message),
+        id: (Date.now() + 1).toString(),
+        text: generateAIResponse(textToSend),
+        sender: 'ai' as const,
         timestamp: new Date()
       }
-      setMessages(prev => [...prev, aiResponse])
-      setIsLoading(false)
+      setMessages((prev) => [...prev, aiResponse])
+      setIsTyping(false)
     }, 1500)
   }
 
-  const generateAIResponse = (userMessage: string) => {
-    const totals = getTotals()
-    const monthlyTotals = getMonthlyTotals()
-    
-    if (userMessage.toLowerCase().includes('net worth')) {
-      return `Your current net worth is $${totals.netWorth.toFixed(2)}. This includes $${totals.totalIncome.toFixed(2)} in total income and $${totals.totalExpense.toFixed(2)} in total expenses.`
-    }
-    
-    if (userMessage.toLowerCase().includes('save')) {
-      return `Based on your current spending of $${monthlyTotals.expense.toFixed(2)} this month, I recommend setting aside 20% of your income for savings. Consider automating your savings to make it easier.`
-    }
-    
-    if (userMessage.toLowerCase().includes('budget')) {
-      return `A good budget breakdown is: 50% for needs (housing, food, utilities), 30% for wants (entertainment, dining out), and 20% for savings and debt repayment.`
-    }
-    
-    return `I understand you're asking about "${userMessage}". Based on your financial data, I'd recommend focusing on building an emergency fund of 3-6 months of expenses first, then consider investing in a diversified portfolio.`
-  }
-
-  const handleQuickQuestion = (question: string) => {
-    setMessage(question)
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).format(date)
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">AI Financial Advisor</h1>
-              <p className="text-sm text-gray-500">Powered by AI</p>
-            </div>
+      <div className="rounded-2xl bg-slate-800 p-8 text-white border border-slate-700">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
+            <Bot className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white">AI Financial Advisor</h2>
+            <p className="text-slate-300 text-sm">Advanced analytics and recommendations</p>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+      {/* Messages Area */}
+      <div className="rounded-2xl bg-white p-6 border border-slate-200 max-h-96 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((msg) => (
             <div
-              className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                msg.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
-              }`}
+              key={msg.id}
+              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <p className="text-sm">{msg.content}</p>
-              <p className={`text-xs mt-1 ${
-                msg.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-              }`}>
-                {msg.timestamp.toLocaleTimeString()}
-              </p>
-            </div>
-          </div>
-        ))}
-        
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 text-gray-900 px-4 py-3 rounded-2xl">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div
+                className={`max-w-[80%] rounded-2xl p-4 ${
+                  msg.sender === 'user'
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-900'
+                }`}
+              >
+                <p className="whitespace-pre-line">{msg.text}</p>
+                <p
+                  className={`text-xs mt-2 ${
+                    msg.sender === 'user' ? 'text-slate-300' : 'text-slate-500'
+                  }`}
+                >
+                  {formatTime(msg.timestamp)}
+                </p>
               </div>
             </div>
-          </div>
-        )}
+          ))}
+
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-slate-100 rounded-2xl p-4">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Quick Questions */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Quick Questions</h3>
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickQuestion(question)}
-                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-slate-600" />
+          <p className="text-slate-600 text-sm">Quick questions:</p>
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {quickQuestions.map((question, index) => (
+            <button
+              key={index}
+              onClick={() => handleSend(question)}
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm hover:bg-slate-50 transition-all text-left"
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      </div>
 
-        {/* Input */}
-        <div className="flex gap-2">
+      {/* Input Field */}
+      <div className="rounded-2xl bg-white p-4 border border-slate-200">
+        <div className="flex gap-3">
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask me anything about your finances..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
           />
           <button
-            onClick={handleSendMessage}
-            disabled={!message.trim() || isLoading}
-            className="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={() => handleSend()}
+            disabled={!message.trim()}
+            className="px-4 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />
           </button>

@@ -21,45 +21,65 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
     {
       title: 'Add Transaction',
       icon: Plus,
-      color: 'bg-blue-500',
+      color: 'bg-slate-800',
       onClick: () => setShowAdd(true)
     },
     {
       title: 'View Calendar',
       icon: Calendar,
-      color: 'bg-green-500',
+      color: 'bg-slate-800',
       onClick: () => {}
     },
     {
       title: 'Set Goals',
       icon: Target,
-      color: 'bg-purple-500',
+      color: 'bg-slate-800',
       onClick: () => {}
     },
     {
       title: 'View Insights',
       icon: TrendingUp,
-      color: 'bg-orange-500',
+      color: 'bg-slate-800',
       onClick: () => {}
     }
   ]
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between">
+      {/* Hero Section */}
+      <div className="rounded-2xl bg-slate-800 p-8 text-white border border-slate-700">
+        <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Good morning! 👋</h1>
-            <p className="text-gray-600">Here's your financial overview</p>
+            <p className="text-slate-300 mb-2">Welcome back!</p>
+            <h1 className="text-white mb-2">Your Financial Overview</h1>
+            <p className="text-slate-300">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">This month</div>
-            <div className="text-3xl font-bold text-gray-900">
-              ${monthlyTotals.net.toFixed(2)}
-            </div>
-            <div className="text-sm text-gray-500">Net worth</div>
+          <div className="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center">
+            <Wallet className="w-8 h-8 text-white" />
           </div>
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <span className="text-slate-300">Net Worth:</span>
+          <h1 className="text-white">${monthlyTotals.net.toLocaleString()}</h1>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="rounded-2xl bg-white p-4 border border-slate-200">
+          <p className="text-slate-600 text-xs mb-1">Monthly Income</p>
+          <p className="text-slate-900">${monthlyTotals.income.toLocaleString()}</p>
+        </div>
+        <div className="rounded-2xl bg-white p-4 border border-slate-200">
+          <p className="text-slate-600 text-xs mb-1">Monthly Expenses</p>
+          <p className="text-slate-900">${monthlyTotals.expense.toLocaleString()}</p>
+        </div>
+        <div className="rounded-2xl bg-white p-4 border border-slate-200">
+          <p className="text-slate-600 text-xs mb-1">Transactions</p>
+          <p className="text-slate-900">12</p>
         </div>
       </div>
 
@@ -67,46 +87,96 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
       <BalanceCards />
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {quickActions.map((action, index) => {
+          const Icon = action.icon;
+          return (
             <button
               key={index}
               onClick={action.onClick}
-              className="flex flex-col items-center p-4 rounded-xl hover:bg-gray-50 transition-colors group"
+              className="rounded-2xl bg-white p-6 border border-slate-200 hover:shadow-md transition-all"
             >
-              <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                <action.icon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-3">
+                <Icon className="w-6 h-6 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{action.title}</span>
+              <p className="text-slate-900 text-sm">{action.title}</p>
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Category Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-green-100">
-              <PieChart className="w-5 h-5 text-green-600" />
+        <div className="rounded-2xl bg-white p-8 border border-slate-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+              <PieChart className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Spending by Category</h2>
+            <h3>Category Spending</h3>
           </div>
-          <CategoryChart />
+          
+          <div className="space-y-3">
+            {categoryTotals.slice(0, 5).map((cat, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-900">{cat.category}</span>
+                  <span className="text-slate-600">${cat.amount.toLocaleString()}</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-slate-700"
+                    style={{ width: `${cat.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+            {categoryTotals.length === 0 && (
+              <p className="text-slate-500 text-center py-8">No spending data yet</p>
+            )}
+          </div>
         </div>
 
-        {/* Trends Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-100">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+        {/* Monthly Trends */}
+        <div className="rounded-2xl bg-white p-8 border border-slate-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Monthly Trends</h2>
+            <h3>This Month</h3>
           </div>
-          <TrendsChart />
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <div>
+                <p className="text-emerald-700 text-sm">Income</p>
+                <p className="text-emerald-900">${monthlyTotals.income.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-50 border border-rose-200">
+              <div>
+                <p className="text-rose-700 text-sm">Expenses</p>
+                <p className="text-rose-900">${monthlyTotals.expense.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-rose-600 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white rotate-180" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-100 border border-slate-200">
+              <div>
+                <p className="text-slate-700 text-sm">Net</p>
+                <p className="text-slate-900">${monthlyTotals.net.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -114,15 +184,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
       <RecentTransactions />
 
       {/* Budget Overview */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-purple-100">
-            <Target className="w-5 h-5 text-purple-600" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">Budget Overview</h2>
-        </div>
-        <BudgetTracker />
-      </div>
+      <BudgetTracker />
     </div>
   )
 }

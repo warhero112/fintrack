@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { X, Calendar, DollarSign, FileText, Tag } from 'lucide-react'
+import { X, Calendar, DollarSign, FileText, Tag, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { useAppStore, Transaction } from '../../stores/appStore'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Card, CardContent } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 
 interface AddTransactionModalProps {
+  isOpen: boolean
   onClose: () => void
   editingTransaction?: Transaction | null
 }
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ 
+  isOpen,
   onClose, 
   editingTransaction 
 }) => {
@@ -20,7 +25,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     addTransaction, 
     updateTransaction, 
     categories, 
-    settings 
+    settings,
+    editingTransaction: storeEditingTransaction
   } = useAppStore()
   
   const [formData, setFormData] = useState({
@@ -30,23 +36,34 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     category: '',
     date: new Date().toISOString().split('T')[0]
   })
-  
-  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   useEffect(() => {
-    if (editingTransaction) {
+    if (editingTransaction || storeEditingTransaction) {
+      const transaction = editingTransaction || storeEditingTransaction
       setFormData({
-        type: editingTransaction.type,
-        amount: editingTransaction.amount.toString(),
-        description: editingTransaction.description,
-        category: editingTransaction.category,
-        date: editingTransaction.date
+        type: transaction.type,
+        amount: transaction.amount.toString(),
+        description: transaction.description,
+        category: transaction.category,
+        date: transaction.date
+      })
+    } else {
+      setFormData({
+        type: 'expense',
+        amount: '',
+        description: '',
+        category: '',
+        date: new Date().toISOString().split('T')[0]
       })
     }
-  }, [editingTransaction])
+  }, [editingTransaction, storeEditingTransaction])
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const newErrors: { [key: string]: string } = {}
     
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       newErrors.amount = 'Amount must be greater than 0'
@@ -64,91 +81,96 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       newErrors.date = 'Date is required'
     }
     
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
-
+    
     const transactionData = {
       type: formData.type,
       amount: parseFloat(formData.amount),
       description: formData.description.trim(),
       category: formData.category,
-      date: formData.date
+      date: formData.date,
+      id: editingTransaction?.id || Date.now().toString()
     }
-
-    if (editingTransaction) {
-      updateTransaction(editingTransaction.id, transactionData)
+    
+    if (editingTransaction || storeEditingTransaction) {
+      updateTransaction(transactionData)
     } else {
       addTransaction(transactionData)
     }
-
+    
     onClose()
+    setErrors({})
   }
 
-  const filteredCategories = categories.filter(cat => cat.type === formData.type)
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const isEditing = !!(editingTransaction || storeEditingTransaction)
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-card rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="border-b border-border p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">
-              {editingTransaction ? 'Edit Transaction' : 'Add Transaction'}
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="p-2"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <FileText className="h-5 w-5" />
+                Edit Transaction
+              </>
+            ) : (
+              <>
+                <DollarSign className="h-5 w-5" />
+                Add Transaction
+              </>
+            )}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing ? 'Update your transaction details' : 'Add a new income or expense'}
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Type Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Transaction Type</Label>
-            <RadioGroup
-              value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value as 'income' | 'expense' })}
-              className="flex gap-4"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Transaction Type */}
+          <div className="space-y-2">
+            <Label>Transaction Type</Label>
+            <Tabs 
+              value={formData.type} 
+              onValueChange={(value) => handleInputChange('type', value)}
+              className="w-full"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="expense" id="expense" />
-                <Label htmlFor="expense" className="cursor-pointer">Expense</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="income" id="income" />
-                <Label htmlFor="income" className="cursor-pointer">Income</Label>
-              </div>
-            </RadioGroup>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="expense" className="flex items-center gap-2">
+                  <ArrowDownRight className="h-4 w-4" />
+                  Expense
+                </TabsTrigger>
+                <TabsTrigger value="income" className="flex items-center gap-2">
+                  <ArrowUpRight className="h-4 w-4" />
+                  Income
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-medium">
-              Amount <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="amount">Amount</Label>
             <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="pl-10"
                 placeholder="0.00"
+                value={formData.amount}
+                onChange={(e) => handleInputChange('amount', e.target.value)}
+                className={`pl-10 ${errors.amount ? 'border-destructive' : ''}`}
               />
             </div>
             {errors.amount && (
@@ -158,17 +180,15 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="description">Description</Label>
             <div className="relative">
-              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="description"
+                placeholder="Enter description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="pl-10"
-                placeholder="What was this for?"
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                className={`pl-10 ${errors.description ? 'border-destructive' : ''}`}
               />
             </div>
             {errors.description && (
@@ -178,28 +198,17 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
           {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-sm font-medium">
-              Category <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="category">Category</Label>
             <div className="relative">
-              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger className="pl-10">
+              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                <SelectTrigger className={`pl-10 ${errors.category ? 'border-destructive' : ''}`}>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: category.color }}
-                        />
-                        {category.name}
-                      </div>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -212,17 +221,15 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
           {/* Date */}
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-sm font-medium">
-              Date <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="date">Date</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="date"
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="pl-10"
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                className={`pl-10 ${errors.date ? 'border-destructive' : ''}`}
               />
             </div>
             {errors.date && (
@@ -230,12 +237,16 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             )}
           </div>
 
-          {/* Submit Button */}
-          <Button type="submit" className="w-full">
-            {editingTransaction ? 'Update Transaction' : 'Add Transaction'}
-          </Button>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {isEditing ? 'Update Transaction' : 'Add Transaction'}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

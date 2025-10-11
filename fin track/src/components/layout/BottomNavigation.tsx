@@ -1,55 +1,71 @@
 import React from 'react'
-import { Home, BarChart3, Calendar, CreditCard, Settings, Bot, Target } from 'lucide-react'
-import { useAppStore } from '../../stores/appStore'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { 
+  Home, 
+  Target, 
+  BarChart3, 
+  Sparkles, 
+  Settings,
+  Plus
+} from 'lucide-react'
 
 interface BottomNavigationProps {
+  tab: number
+  setTab: (tab: number) => void
   isMobileView: boolean
 }
 
-export const BottomNavigation: React.FC<BottomNavigationProps> = ({ isMobileView }) => {
-  const { tab, setTab } = useAppStore()
-
+export const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
+  tab, 
+  setTab, 
+  isMobileView 
+}) => {
   const navigationItems = [
-    { id: 0, icon: Home, label: 'Home' },
-    { id: 1, icon: BarChart3, label: 'Insights' },
-    { id: 2, icon: Calendar, label: 'Calendar' },
-    { id: 3, icon: CreditCard, label: 'Transactions' },
-    { id: 4, icon: Settings, label: 'Settings' },
-    { id: 5, icon: Bot, label: 'AI Advisor' },
-    { id: 6, icon: Target, label: 'Goals' }
+    { id: 1, icon: Home, label: 'Home' },
+    { id: 2, icon: BarChart3, label: 'Insights' },
+    { id: 3, icon: Target, label: 'Goals' },
+    { id: 4, icon: Sparkles, label: 'AI' },
+    { id: 5, icon: Settings, label: 'Settings' }
   ]
 
   if (!isMobileView) return null
 
   return (
-    <div className="flex gap-2 border-t border-[#f0f2f4] bg-white px-4 pb-3 pt-2">
-      {navigationItems.map((item) => {
-        const Icon = item.icon
-        const isActive = tab === item.id
-        
-        return (
-          <a 
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            className={`just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#111418] ${
-              isActive ? 'text-[#111418]' : 'text-[#617589]'
-            }`}
-            href="#"
-          >
-            <div className={`text-[#111418] flex h-8 items-center justify-center ${
-              isActive ? 'text-[#111418]' : 'text-[#617589]'
-            }`} data-icon="House" data-size="24px" data-weight="fill">
-              <Icon className="w-6 h-6" />
-            </div>
-            <p className={`text-xs font-medium leading-normal tracking-[0.015em] ${
-              isActive ? 'text-[#111418]' : 'text-[#617589]'
-            }`}>
-              {item.label}
-            </p>
-          </a>
-        )
-      })}
-      <div className="h-5 bg-white"></div>
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex items-center justify-between px-4 py-2">
+        {navigationItems.map((item) => {
+          const Icon = item.icon
+          const isActive = tab === item.id
+          
+          return (
+            <Button
+              key={item.id}
+              variant="ghost"
+              size="sm"
+              onClick={() => setTab(item.id)}
+              className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+                isActive 
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className={`p-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-primary/10' 
+                  : 'hover:bg-accent'
+              }`}>
+                <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : ''}`} />
+              </div>
+              <span className={`text-xs font-medium ${
+                isActive ? 'text-primary' : 'text-muted-foreground'
+              }`}>
+                {item.label}
+              </span>
+            </Button>
+          )
+        })}
+      </div>
     </div>
   )
 }

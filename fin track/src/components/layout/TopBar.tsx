@@ -1,10 +1,21 @@
 import React from 'react'
-import { RefreshCw, Settings, Bell, Monitor, Smartphone } from 'lucide-react'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Separator } from '../ui/separator'
+import { 
+  RefreshCw, 
+  Bell, 
+  Settings, 
+  Smartphone, 
+  Monitor,
+  Menu,
+  Search
+} from 'lucide-react'
 
 interface TopBarProps {
   title: string
-  viewMode?: string
-  setViewMode?: (mode: string) => void
+  viewMode?: 'mobile' | 'desktop'
+  setViewMode?: (mode: 'mobile' | 'desktop') => void
   showViewToggle?: boolean
   onRefresh?: () => void
 }
@@ -17,61 +28,81 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefresh 
 }) => {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-4">
-      <div className="flex items-center justify-between">
+    <div className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center">
         {/* Left side */}
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+          <Button variant="ghost" size="sm" className="md:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">F</span>
+            </div>
+            <h1 className="text-xl font-semibold">{title}</h1>
+          </div>
+        </div>
+
+        {/* Center - Search */}
+        <div className="flex-1 max-w-md mx-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search transactions..."
+              className="w-full pl-10 pr-4 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
+          </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Refresh Button */}
           {onRefresh && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onRefresh}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Refresh"
+              className="hidden sm:flex"
             >
-              <RefreshCw className="w-5 h-5 text-gray-600" />
-            </button>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           )}
 
           {/* View Mode Toggle */}
           {showViewToggle && viewMode && setViewMode && (
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
+            <div className="flex items-center border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'mobile' ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => setViewMode('mobile')}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  viewMode === 'mobile' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className="h-8 px-3"
               >
-                Mobile
-              </button>
-              <button
+                <Smartphone className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'desktop' ? 'default' : 'ghost'}
+                size="sm"
                 onClick={() => setViewMode('desktop')}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  viewMode === 'desktop' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className="h-8 px-3"
               >
-                Desktop
-              </button>
+                <Monitor className="h-4 w-4" />
+              </Button>
             </div>
           )}
 
           {/* Notifications */}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Bell className="w-5 h-5 text-gray-600" />
-          </button>
+          <Button variant="ghost" size="sm" className="relative">
+            <Bell className="h-4 w-4" />
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+              3
+            </Badge>
+          </Button>
 
-          {/* Settings Button */}
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Settings className="w-5 h-5 text-gray-600" />
-          </button>
+          {/* Settings */}
+          <Button variant="ghost" size="sm">
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>

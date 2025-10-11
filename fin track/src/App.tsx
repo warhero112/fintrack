@@ -176,7 +176,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen bg-white text-[#111418] ${isMobileView ? 'pb-20' : ''}`} style={{fontFamily: 'Manrope, "Noto Sans", sans-serif'}}>
+      <div className={`min-h-screen bg-background text-foreground ${isMobileView ? 'pb-20' : ''}`}>
         {/* Desktop Navigation */}
         {!isMobileView && <DesktopNav isMobileView={isMobileView} />}
 

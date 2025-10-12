@@ -8,6 +8,9 @@ export interface Transaction {
   description: string
   category: string
   date: string
+  notes?: string
+  isRecurring?: boolean
+  recurringId?: string
   createdAt: string
   updatedAt: string
 }

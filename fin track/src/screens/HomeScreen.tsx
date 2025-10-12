@@ -3,6 +3,7 @@ import { BalanceCards } from '../components/home/BalanceCards'
 import { RecentTransactions } from '../components/home/RecentTransactions'
 import { CategoryChart } from '../components/analytics/CategoryChart'
 import { TrendsChart } from '../components/analytics/TrendsChart'
+import { ModernPieChart } from '../components/charts/ModernPieChart'
 import { BudgetTracker } from '../components/BudgetTracker'
 import { 
   Plus, 
@@ -126,25 +127,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ isMobileView }) => {
             <h3>Category Spending</h3>
           </div>
           
-          <div className="space-y-3">
-            {categoryTotalsWithPercentages.slice(0, 5).map((cat, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-900">{cat.category}</span>
-                  <span className="text-slate-600">${cat.expense.toLocaleString()}</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-slate-700"
-                    style={{ width: `${cat.percentage}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-            {categoryTotalsWithPercentages.length === 0 && (
-              <p className="text-slate-500 text-center py-8">No spending data yet</p>
-            )}
-          </div>
+          <ModernPieChart 
+            data={categoryTotalsWithPercentages.slice(0, 8).map(cat => ({
+              category: cat.category,
+              amount: cat.expense,
+              percentage: cat.percentage,
+              color: '#3b82f6'
+            }))}
+            title=""
+            height={280}
+          />
         </div>
 
         {/* Monthly Trends */}

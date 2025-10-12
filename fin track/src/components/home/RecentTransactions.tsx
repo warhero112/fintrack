@@ -5,7 +5,8 @@ import {
   ArrowUpRight, 
   ArrowDownRight, 
   Edit3, 
-  Trash2
+  Trash2,
+  Repeat
 } from 'lucide-react'
 
 const formatCurrency = (amount: number, currency: string = 'USD') => {
@@ -97,13 +98,24 @@ export const RecentTransactions: React.FC = () => {
                       {isIncome ? '+' : '-'}{formatCurrency(transaction.amount, settings?.currency || 'USD')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <span className="text-slate-500 text-sm">{transaction.date}</span>
                     <span className="text-slate-400">•</span>
                     <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-slate-200 text-slate-700">
                       {transaction.category}
                     </span>
+                    {transaction.isRecurring && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-blue-100 text-blue-700">
+                        <Repeat className="h-3 w-3 mr-1" />
+                        Recurring
+                      </span>
+                    )}
                   </div>
+                  {transaction.notes && (
+                    <p className="text-slate-500 text-sm italic truncate">
+                      "{transaction.notes}"
+                    </p>
+                  )}
                 </div>
 
                 {/* Action buttons */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Calendar, DollarSign, FileText, Tag, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { X, Calendar, DollarSign, FileText, Tag, ArrowUpRight, ArrowDownRight, StickyNote, Repeat } from 'lucide-react'
 import { useAppStore, Transaction } from '../../stores/appStore'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Switch } from '../ui/switch'
+import { Textarea } from '../ui/textarea'
 
 interface AddTransactionModalProps {
   isOpen: boolean
@@ -34,7 +36,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     amount: '',
     description: '',
     category: '',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    notes: '',
+    isRecurring: false,
+    frequency: 'monthly' as 'daily' | 'weekly' | 'monthly' | 'yearly'
   })
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
@@ -47,7 +52,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         amount: transaction.amount.toString(),
         description: transaction.description,
         category: transaction.category,
-        date: transaction.date
+        date: transaction.date,
+        notes: transaction.notes || '',
+        isRecurring: transaction.isRecurring || false,
+        frequency: 'monthly'
       })
     } else {
       setFormData({
@@ -55,7 +63,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         amount: '',
         description: '',
         category: '',
-        date: new Date().toISOString().split('T')[0]
+        date: new Date().toISOString().split('T')[0],
+        notes: '',
+        isRecurring: false,
+        frequency: 'monthly'
       })
     }
   }, [editingTransaction, storeEditingTransaction])
@@ -92,6 +103,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       description: formData.description.trim(),
       category: formData.category,
       date: formData.date,
+      notes: formData.notes.trim(),
+      isRecurring: formData.isRecurring,
+      recurringId: formData.isRecurring ? Date.now().toString() : undefined,
       id: editingTransaction?.id || Date.now().toString()
     }
     
@@ -234,6 +248,58 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
             {errors.date && (
               <p className="text-sm text-destructive">{errors.date}</p>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <div className="relative">
+              <StickyNote className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Textarea
+                id="notes"
+                placeholder="Add a note about this transaction..."
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                className="pl-10 min-h-[80px]"
+              />
+            </div>
+          </div>
+
+          {/* Recurring Transaction */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="recurring">Recurring Transaction</Label>
+                <p className="text-sm text-muted-foreground">
+                  Set up automatic recurring transactions for bills and subscriptions
+                </p>
+              </div>
+              <Switch
+                id="recurring"
+                checked={formData.isRecurring}
+                onCheckedChange={(checked) => handleInputChange('isRecurring', checked.toString())}
+              />
+            </div>
+
+            {formData.isRecurring && (
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Frequency</Label>
+                <div className="relative">
+                  <Repeat className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Select value={formData.frequency} onValueChange={(value) => handleInputChange('frequency', value)}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             )}
           </div>
 

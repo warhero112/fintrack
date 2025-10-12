@@ -122,19 +122,19 @@ export function AIAdvisorScreen() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)]">
-      <div className="rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl mb-6">
+      <div className="rounded-3xl bg-slate-800 p-8 text-white shadow-2xl mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center shadow-lg">
             <Bot className="w-8 h-8 text-white" />
           </div>
           <div>
             <h2 className="text-white mb-1 text-2xl font-bold">AI Financial Advisor</h2>
-            <p className="text-blue-100">Powered by advanced AI</p>
+            <p className="text-slate-300">Powered by advanced AI</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto mb-6 space-y-4 rounded-2xl bg-white p-6 border border-gray-200 shadow-sm">
+      <div className="flex-1 overflow-y-auto mb-6 space-y-4 rounded-2xl bg-white p-6 border border-slate-200 shadow-sm">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -143,14 +143,14 @@ export function AIAdvisorScreen() {
             <div
               className={`max-w-[80%] rounded-2xl p-4 shadow-sm ${
                 message.sender === 'user'
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  ? 'bg-slate-800 text-white'
+                  : 'bg-slate-100 text-slate-900'
               }`}
             >
               <p className="whitespace-pre-line">{message.text}</p>
               <p
                 className={`text-xs mt-2 ${
-                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                  message.sender === 'user' ? 'text-slate-300' : 'text-slate-500'
                 }`}
               >
                 {formatTime(message.timestamp)}
@@ -161,11 +161,11 @@ export function AIAdvisorScreen() {
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-2xl p-4">
+            <div className="bg-slate-100 rounded-2xl p-4">
               <div className="flex gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 rounded-full bg-slate-700 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -176,15 +176,15 @@ export function AIAdvisorScreen() {
 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-gray-700" />
-          <p className="text-gray-600 text-sm font-medium">Quick questions:</p>
+          <Sparkles className="w-4 h-4 text-slate-700" />
+          <p className="text-slate-600 text-sm font-medium">Quick questions:</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {quickQuestions.map((question, index) => (
             <button
               key={index}
               onClick={() => handleSend(question)}
-              className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 text-left font-medium"
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 text-left font-medium"
             >
               {question}
             </button>
@@ -192,7 +192,7 @@ export function AIAdvisorScreen() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 border border-gray-200 shadow-sm">
+      <div className="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm">
         <div className="flex gap-3">
           <input
             type="text"
@@ -200,12 +200,12 @@ export function AIAdvisorScreen() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask me anything about your finances..."
-            className="flex-1 px-6 py-4 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+            className="flex-1 px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim()}
-            className="px-6 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-purple-600 shadow-lg"
+            className="px-6 py-4 rounded-2xl bg-slate-800 text-white hover:bg-slate-700 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-slate-800 shadow-lg"
           >
             <Send className="w-5 h-5" />
           </button>

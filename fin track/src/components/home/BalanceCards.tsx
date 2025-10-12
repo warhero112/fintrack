@@ -1,13 +1,9 @@
 import React from 'react'
 import { useAppStore } from '../../stores/appStore'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Badge } from '../ui/badge'
 import { 
   DollarSign, 
   ArrowUpRight, 
   ArrowDownRight, 
-  TrendingUp,
-  TrendingDown,
   Wallet
 } from 'lucide-react'
 
@@ -29,28 +25,22 @@ export const BalanceCards: React.FC = () => {
       title: 'Total Balance',
       amount: totals.netWorth,
       icon: Wallet,
-      trend: '+2.5%',
-      trendDirection: 'up' as const,
-      description: 'Your net worth',
-      color: 'text-blue-600'
+      color: 'text-slate-700',
+      bgColor: 'bg-slate-100'
     },
     {
       title: 'Total Income',
       amount: totals.totalIncome,
       icon: ArrowUpRight,
-      trend: '+12%',
-      trendDirection: 'up' as const,
-      description: 'This month',
-      color: 'text-emerald-600'
+      color: 'text-emerald-700',
+      bgColor: 'bg-emerald-50'
     },
     {
       title: 'Total Expenses',
       amount: totals.totalExpense,
       icon: ArrowDownRight,
-      trend: '+5%',
-      trendDirection: 'down' as const,
-      description: 'This month',
-      color: 'text-red-600'
+      color: 'text-rose-700',
+      bgColor: 'bg-rose-50'
     }
   ]
 
@@ -58,33 +48,24 @@ export const BalanceCards: React.FC = () => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {cards.map((card, index) => {
         const Icon = card.icon;
-        const TrendIcon = card.trendDirection === 'up' ? TrendingUp : TrendingDown;
         
         return (
-          <Card key={index} className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {card.title}
-              </CardTitle>
-              <div className={`p-2 rounded-lg bg-muted ${card.color}`}>
-                <Icon className="h-4 w-4" />
+          <div key={index} className="rounded-2xl bg-white p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl ${card.bgColor} flex items-center justify-center`}>
+                <Icon className={`w-6 h-6 ${card.color}`} />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(card.amount, currency)}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <TrendIcon className={`h-3 w-3 ${
-                  card.trendDirection === 'up' ? 'text-emerald-600' : 'text-red-600'
-                }`} />
-                <span className={`text-xs font-medium ${
-                  card.trendDirection === 'up' ? 'text-emerald-600' : 'text-red-600'
-                }`}>
-                  {card.trend}
-                </span>
-                <span className="text-xs text-muted-foreground">{card.description}</span>
+              <div className="text-right">
+                <p className="text-slate-600 text-sm">{card.title}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className={`text-3xl font-bold ${card.color} mb-1`}>
+              {formatCurrency(card.amount, currency)}
+            </div>
+            <div className="text-sm text-slate-500">
+              {card.title === 'Total Balance' ? 'Net Worth' : `Total ${card.title.split(' ')[1]}`}
+            </div>
+          </div>
         );
       })}
     </div>

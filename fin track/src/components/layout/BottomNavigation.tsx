@@ -32,7 +32,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   if (!isMobileView) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container flex items-center justify-between px-4 py-2">
         {navigationItems.map((item) => {
           const Icon = item.icon
@@ -46,19 +46,19 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               onClick={() => setTab(item.id)}
               className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
                 isActive 
-                  ? 'text-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-slate-900' 
+                  : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <div className={`p-2 rounded-lg transition-colors ${
                 isActive 
-                  ? 'bg-primary/10' 
-                  : 'hover:bg-accent'
+                  ? 'bg-slate-100' 
+                  : 'hover:bg-slate-50'
               }`}>
-                <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : ''}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
               </div>
               <span className={`text-xs font-medium ${
-                isActive ? 'text-primary' : 'text-muted-foreground'
+                isActive ? 'text-slate-900' : 'text-slate-500'
               }`}>
                 {item.label}
               </span>

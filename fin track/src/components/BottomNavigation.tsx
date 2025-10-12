@@ -15,18 +15,30 @@ export function BottomNavigation() {
   const { tab, setTab } = useAppStore();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-bottom">
-      <div className="max-w-md mx-auto px-1 py-1.5">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 safe-area-bottom shadow-lg">
+      <div className="max-w-md mx-auto px-1 py-2">
         <div className="flex items-center justify-between">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = tab === item.id;
             return (
-              <button key={item.id} onClick={() => setTab(item.id)} className="flex flex-col items-center gap-0.5 px-1 py-1.5 min-w-0 flex-1">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isActive ? 'bg-slate-800' : 'bg-transparent'}`}>
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
+              <button 
+                key={item.id} 
+                onClick={() => setTab(item.id)} 
+                className="flex flex-col items-center gap-1 px-2 py-2 min-w-0 flex-1 rounded-xl transition-all duration-200 hover:bg-gray-50"
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg scale-105' 
+                    : 'bg-transparent hover:bg-gray-100'
+                }`}>
+                  <Icon className={`w-5 h-5 transition-colors duration-200 ${
+                    isActive ? 'text-white' : 'text-gray-500'
+                  }`} />
                 </div>
-                <span className={`text-[10px] leading-tight truncate max-w-full transition-all ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
+                <span className={`text-[10px] leading-tight truncate max-w-full transition-all duration-200 font-medium ${
+                  isActive ? 'text-gray-900' : 'text-gray-500'
+                }`}>
                   {item.label}
                 </span>
               </button>

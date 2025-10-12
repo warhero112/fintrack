@@ -77,27 +77,27 @@ export function TransactionModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className="bg-slate-800 p-6 text-white">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
           <div className="flex items-center justify-between">
-            <h2>{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h2>
+            <h2 className="text-xl font-bold">{editingTransaction ? 'Edit Transaction' : 'Add Transaction'}</h2>
             <button
               onClick={handleClose}
-              className="p-2 rounded-xl hover:bg-slate-700 transition-colors"
+              className="p-2 rounded-xl hover:bg-white/20 transition-colors duration-200"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: 'expense' })}
-              className={`flex-1 py-3 rounded-xl transition-all ${
+              className={`flex-1 py-3 rounded-xl transition-all duration-200 font-medium ${
                 formData.type === 'expense'
-                  ? 'bg-rose-600 text-white'
-                  : 'text-slate-600 hover:bg-white'
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-white hover:text-gray-900'
               }`}
             >
               Expense
@@ -105,10 +105,10 @@ export function TransactionModal() {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: 'income' })}
-              className={`flex-1 py-3 rounded-xl transition-all ${
+              className={`flex-1 py-3 rounded-xl transition-all duration-200 font-medium ${
                 formData.type === 'income'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-slate-600 hover:bg-white'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-white hover:text-gray-900'
               }`}
             >
               Income
@@ -116,8 +116,8 @@ export function TransactionModal() {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-600 mb-2">
-              <FileText className="w-4 h-4 inline mr-1" />
+            <label className="block text-sm text-gray-700 mb-2 font-medium">
+              <FileText className="w-4 h-4 inline mr-2" />
               Description
             </label>
             <input
@@ -125,13 +125,13 @@ export function TransactionModal() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="e.g., Grocery shopping"
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-600 mb-2">
-              <DollarSign className="w-4 h-4 inline mr-1" />
+            <label className="block text-sm text-gray-700 mb-2 font-medium">
+              <DollarSign className="w-4 h-4 inline mr-2" />
               Amount
             </label>
             <input
@@ -140,19 +140,19 @@ export function TransactionModal() {
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
               placeholder="0.00"
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-600 mb-2">
-              <Tag className="w-4 h-4 inline mr-1" />
+            <label className="block text-sm text-gray-700 mb-2 font-medium">
+              <Tag className="w-4 h-4 inline mr-2" />
               Category
             </label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -162,15 +162,15 @@ export function TransactionModal() {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-600 mb-2">
-              <CalendarIcon className="w-4 h-4 inline mr-1" />
+            <label className="block text-sm text-gray-700 mb-2 font-medium">
+              <CalendarIcon className="w-4 h-4 inline mr-2" />
               Date
             </label>
             <input
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
             />
           </div>
 
@@ -178,13 +178,13 @@ export function TransactionModal() {
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all"
+              className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 transition-all"
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
             >
               {editingTransaction ? 'Update' : 'Add'} Transaction
             </button>

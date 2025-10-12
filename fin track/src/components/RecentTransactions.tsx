@@ -71,12 +71,12 @@ export function RecentTransactions({ transactions, limit = 5 }: RecentTransactio
   }
 
   return (
-    <div className="rounded-2xl bg-white p-8 border border-slate-200">
+    <div className="rounded-2xl bg-white p-8 border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between mb-6">
-        <h3>Recent Transactions</h3>
+        <h3 className="text-xl font-bold text-gray-900">Recent Transactions</h3>
         <button
           onClick={() => setShowAdd(true)}
-          className="px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700 transition-all"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg"
         >
           <Plus className="w-4 h-4 inline mr-1" />
           Add
@@ -87,8 +87,8 @@ export function RecentTransactions({ transactions, limit = 5 }: RecentTransactio
         {recentTransactions.map((transaction) => {
           const Icon = getIcon(transaction.icon);
           const isIncome = transaction.type === 'income';
-          const bgColor = isIncome ? 'bg-emerald-100' : 'bg-rose-100';
-          const iconColor = isIncome ? 'text-emerald-700' : 'text-rose-700';
+          const bgColor = isIncome ? 'bg-gradient-to-br from-green-100 to-emerald-100' : 'bg-gradient-to-br from-red-100 to-rose-100';
+          const iconColor = isIncome ? 'text-green-700' : 'text-red-700';
           const isHovered = hoveredId === transaction.id;
 
           return (
@@ -96,7 +96,7 @@ export function RecentTransactions({ transactions, limit = 5 }: RecentTransactio
               key={transaction.id}
               onMouseEnter={() => setHoveredId(transaction.id)}
               onMouseLeave={() => setHoveredId(null)}
-              className="relative rounded-2xl bg-slate-50 p-4 hover:shadow-md transition-all group"
+              className="relative rounded-2xl bg-gray-50 p-4 hover:shadow-lg transition-all duration-200 group hover:scale-[1.02]"
             >
               <div className="flex items-center gap-4">
                 <div className={`w-16 h-16 rounded-2xl ${bgColor} flex items-center justify-center flex-shrink-0`}>

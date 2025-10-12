@@ -15,15 +15,23 @@ export function Sidebar() {
   const { tab, setTab } = useAppStore();
 
   return (
-    <div className="fixed left-0 top-20 bottom-0 w-64 bg-white border-r border-slate-200 overflow-y-auto">
+    <div className="fixed left-0 top-20 bottom-0 w-64 bg-white/95 backdrop-blur-md border-r border-gray-200 overflow-y-auto shadow-lg">
       <div className="p-4 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = tab === item.id;
           return (
-            <button key={item.id} onClick={() => setTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+            <button 
+              key={item.id} 
+              onClick={() => setTab(item.id)} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                isActive 
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
               <Icon className="w-5 h-5" />
-              <span>{item.label}</span>
+              <span className="font-medium">{item.label}</span>
             </button>
           );
         })}

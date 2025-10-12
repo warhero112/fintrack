@@ -40,13 +40,13 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <div className="w-20 h-20 rounded-3xl bg-slate-800 flex items-center justify-center mx-auto mb-6 shadow-xl">
             <Loader2 className="w-10 h-10 text-white animate-spin" />
           </div>
-          <h2 className="text-gray-900 mb-2 font-bold text-xl">FinTrack</h2>
-          <p className="text-gray-600">Loading your financial data...</p>
+          <h2 className="text-slate-900 mb-2 font-bold text-xl">FinTrack</h2>
+          <p className="text-slate-600">Loading your financial data...</p>
         </div>
       </div>
     );
@@ -54,7 +54,7 @@ export default function App() {
 
   if (viewMode === 'mobile') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="min-h-screen bg-slate-50">
         <TopBar onRefresh={() => window.location.reload()} />
         <main className="max-w-md mx-auto px-4 pt-24 pb-32">
           <div className={`transition-all duration-500 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -68,7 +68,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-slate-50">
       <TopBar onRefresh={() => window.location.reload()} />
       <Sidebar />
       <main className="ml-64 pt-20 px-8 pb-8">

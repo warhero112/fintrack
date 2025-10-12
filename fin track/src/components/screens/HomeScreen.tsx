@@ -27,30 +27,30 @@ export function HomeScreen() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl">
+      <div className="rounded-3xl bg-slate-800 p-8 text-white shadow-2xl">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <p className="text-blue-100 mb-2 font-medium">Welcome back!</p>
+            <p className="text-slate-300 mb-2 font-medium">Welcome back!</p>
             <h1 className="text-white mb-2 text-3xl font-bold">Your Financial Overview</h1>
-            <p className="text-blue-100">
+            <p className="text-slate-300">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+          <div className="w-20 h-20 rounded-3xl bg-slate-700 flex items-center justify-center shadow-lg">
             <Wallet className="w-10 h-10 text-white" />
           </div>
         </div>
 
         <div className="flex items-baseline gap-3">
-          <span className="text-blue-100 text-lg font-medium">Net Worth:</span>
+          <span className="text-slate-300 text-lg font-medium">Net Worth:</span>
           <h1 className="text-white text-4xl font-bold">${totals.balance.toLocaleString()}</h1>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         {stats.map((stat, index) => (
-          <div key={index} className="rounded-2xl bg-white p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <p className="text-gray-600 text-xs mb-1 font-medium">{stat.label}</p>
+          <div key={index} className="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+            <p className="text-slate-600 text-xs mb-1 font-medium">{stat.label}</p>
             <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
           </div>
         ))}
@@ -69,12 +69,12 @@ export function HomeScreen() {
             <button
               key={index}
               onClick={action.onClick}
-              className="rounded-2xl bg-white p-6 border border-gray-200 hover:shadow-lg transition-all duration-200 hover:scale-105 group"
+              className="rounded-2xl bg-white p-6 border border-slate-200 hover:shadow-lg transition-all duration-200 hover:scale-105 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
+              <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
                 <Icon className="w-6 h-6 text-white" />
               </div>
-              <p className="text-gray-900 text-sm font-medium">{action.label}</p>
+              <p className="text-slate-900 text-sm font-medium">{action.label}</p>
             </button>
           );
         })}

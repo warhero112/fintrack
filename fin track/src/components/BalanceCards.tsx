@@ -21,32 +21,32 @@ export function BalanceCards({ balance, income, expenses, currency = 'USD' }: Ba
     {
       title: 'Net Worth',
       amount: balance,
-      color: 'blue',
-      bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100',
-      borderColor: 'border-blue-200',
+      color: 'slate',
+      bgColor: 'bg-slate-100',
+      borderColor: 'border-slate-200',
       icon: TrendingUp,
       change: '+12.5%',
-      changeColor: 'text-green-600'
+      changeColor: 'text-emerald-600'
     },
     {
       title: 'Total Income',
       amount: income,
-      color: 'green',
-      bgColor: 'bg-gradient-to-br from-green-50 to-emerald-100',
-      borderColor: 'border-green-200',
+      color: 'emerald',
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-200',
       icon: ArrowUpRight,
       change: '+8.2%',
-      changeColor: 'text-green-600'
+      changeColor: 'text-emerald-600'
     },
     {
       title: 'Total Expenses',
       amount: expenses,
-      color: 'red',
-      bgColor: 'bg-gradient-to-br from-red-50 to-rose-100',
-      borderColor: 'border-red-200',
+      color: 'rose',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-200',
       icon: ArrowDownRight,
       change: '-3.1%',
-      changeColor: 'text-red-600'
+      changeColor: 'text-rose-600'
     }
   ];
 
@@ -55,15 +55,15 @@ export function BalanceCards({ balance, income, expenses, currency = 'USD' }: Ba
       {cards.map((card, index) => {
         const Icon = card.icon;
         const iconBgClass = {
-          blue: 'bg-gradient-to-br from-blue-500 to-blue-600',
-          green: 'bg-gradient-to-br from-green-500 to-emerald-600',
-          red: 'bg-gradient-to-br from-red-500 to-rose-600'
+          slate: 'bg-slate-800',
+          emerald: 'bg-emerald-600',
+          rose: 'bg-rose-600'
         }[card.color];
         
         const textColorClass = {
-          blue: 'text-blue-700',
-          green: 'text-green-700',
-          red: 'text-red-700'
+          slate: 'text-slate-700',
+          emerald: 'text-emerald-700',
+          rose: 'text-rose-700'
         }[card.color];
 
         return (
@@ -72,7 +72,7 @@ export function BalanceCards({ balance, income, expenses, currency = 'USD' }: Ba
             className={`rounded-2xl ${card.bgColor} p-6 border ${card.borderColor} hover:shadow-lg transition-all duration-300 hover:scale-105`}
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="text-gray-600 text-sm font-medium">{card.title}</p>
+              <p className="text-slate-600 text-sm font-medium">{card.title}</p>
               <div className={`w-12 h-12 rounded-xl ${iconBgClass} flex items-center justify-center shadow-lg`}>
                 <Icon className="w-6 h-6 text-white" />
               </div>
@@ -86,7 +86,7 @@ export function BalanceCards({ balance, income, expenses, currency = 'USD' }: Ba
               <span className={`text-sm font-medium ${card.changeColor}`}>
                 {card.change}
               </span>
-              <span className="text-gray-500 text-xs">vs last month</span>
+              <span className="text-slate-500 text-xs">vs last month</span>
             </div>
           </div>
         );

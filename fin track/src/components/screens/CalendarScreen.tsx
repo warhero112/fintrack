@@ -60,20 +60,20 @@ export function CalendarScreen() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-slate-800 p-8 text-white border border-slate-700">
+      <div className="rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 p-8 text-white shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <CalendarIcon className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-white">Calendar</h2>
-              <p className="text-slate-300 text-sm">Track your daily transactions</p>
+              <h2 className="text-white text-2xl font-bold">Calendar</h2>
+              <p className="text-blue-100 text-sm">Track your daily transactions</p>
             </div>
           </div>
           <button
             onClick={() => setShowAdd(true)}
-            className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 transition-all text-white"
+            className="px-4 py-2 rounded-xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-200 text-white font-medium shadow-lg"
           >
             <Plus className="w-5 h-5 inline mr-1" />
             Add
@@ -82,34 +82,34 @@ export function CalendarScreen() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
-          <p className="text-emerald-700 text-sm mb-1">Income</p>
-          <p className="text-emerald-900">${monthlyTotals.income.toLocaleString()}</p>
+        <div className="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 border border-green-200 p-4 shadow-sm">
+          <p className="text-green-700 text-sm mb-1 font-medium">Income</p>
+          <p className="text-green-900 text-lg font-bold">${monthlyTotals.income.toLocaleString()}</p>
         </div>
-        <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4">
-          <p className="text-rose-700 text-sm mb-1">Expenses</p>
-          <p className="text-rose-900">${monthlyTotals.expenses.toLocaleString()}</p>
+        <div className="rounded-2xl bg-gradient-to-br from-red-50 to-rose-100 border border-red-200 p-4 shadow-sm">
+          <p className="text-red-700 text-sm mb-1 font-medium">Expenses</p>
+          <p className="text-red-900 text-lg font-bold">${monthlyTotals.expenses.toLocaleString()}</p>
         </div>
-        <div className="rounded-2xl bg-slate-100 border border-slate-200 p-4">
-          <p className="text-slate-700 text-sm mb-1">Net</p>
-          <p className="text-slate-900">${monthlyTotals.balance.toLocaleString()}</p>
+        <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 p-4 shadow-sm">
+          <p className="text-gray-700 text-sm mb-1 font-medium">Net</p>
+          <p className="text-gray-900 text-lg font-bold">${monthlyTotals.balance.toLocaleString()}</p>
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-6 border border-slate-200">
+      <div className="rounded-2xl bg-white p-6 border border-gray-200 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={previousMonth}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-xl hover:bg-gray-100 transition-colors duration-200"
           >
-            <ChevronLeft className="w-5 h-5 text-slate-600" />
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
           
           <div className="text-center">
-            <h3 className="text-slate-900">{monthNames[month]} {year}</h3>
+            <h3 className="text-gray-900 text-xl font-bold">{monthNames[month]} {year}</h3>
             <button
               onClick={goToToday}
-              className="text-sm text-slate-700 hover:text-slate-900 transition-colors"
+              className="text-sm text-gray-700 hover:text-gray-900 transition-colors duration-200 font-medium"
             >
               Today
             </button>
@@ -117,15 +117,15 @@ export function CalendarScreen() {
 
           <button
             onClick={nextMonth}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-xl hover:bg-gray-100 transition-colors duration-200"
           >
-            <ChevronRight className="w-5 h-5 text-slate-600" />
+            <ChevronRight className="w-5 h-5 text-gray-600" />
           </button>
         </div>
 
         <div className="grid grid-cols-7 gap-2 mb-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-center text-slate-600 text-sm py-2">
+            <div key={day} className="text-center text-gray-600 text-sm py-2 font-medium">
               {day}
             </div>
           ))}

@@ -1,241 +1,84 @@
-import React, { useEffect, useState } from 'react'
-import { Toaster } from 'sonner'
-import { useAppStore } from './stores/appStore'
-import { useViewMode } from './hooks/useViewMode'
-import { useLoading } from './hooks/useLoading'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { useEffect, useState } from 'react';
+import { useAppStore } from './store/appStore';
+import { TopBar } from './components/TopBar';
+import { BottomNavigation } from './components/BottomNavigation';
+import { Sidebar } from './components/Sidebar';
+import { HomeScreen } from './components/screens/HomeScreen';
+import { AIAdvisorScreen } from './components/screens/AIAdvisorScreen';
+import { CalendarScreen } from './components/screens/CalendarScreen';
+import { InsightsScreen } from './components/screens/InsightsScreen';
+import { GoalsScreen } from './components/screens/GoalsScreen';
+import { TransactionsScreen } from './components/screens/TransactionsScreen';
+import { SettingsScreen } from './components/screens/SettingsScreen';
+import { TransactionModal } from './components/TransactionModal';
+import { Loader2 } from 'lucide-react';
 
-// Layout Components
-import { TopBar } from './components/layout/TopBar'
-import { BottomNavigation } from './components/layout/BottomNavigation'
-import { DesktopNav } from './components/layout/DesktopNav'
+export default function App() {
+  const { tab, isLoading, setIsLoading, viewMode } = useAppStore();
+  const [showContent, setShowContent] = useState(false);
 
-// Screen Components
-import { HomeScreen } from './screens/HomeScreen'
-import { EnhancedInsightsScreen } from './screens/EnhancedInsightsScreen'
-import { CalendarScreen } from './screens/CalendarScreen'
-import { WalletsScreen } from './screens/WalletsScreen'
-import { ProfileScreen } from './screens/ProfileScreen'
-import { AIAdvisorScreen } from './screens/AIAdvisorScreen'
-import { GoalsScreen } from './screens/GoalsScreen'
-
-// Modal Components
-import { AddTransactionModal } from './components/modals/AddTransactionModal'
-import { Sidebar } from './components/Sidebar'
-
-// PWA Components
-import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt'
-import { UpdatePrompt } from './components/pwa/UpdatePrompt'
-import { OfflineIndicator } from './components/pwa/OfflineIndicator'
-
-// Loading Components
-import { LoadingScreen } from './components/ui/loading-screen'
-import { RefreshScenario } from './components/ui/refresh-scenario'
-
-// Feature Components
-import { FloatingActionButton } from './components/FloatingActionButton'
-import { TransactionList } from './components/TransactionList'
-import { SearchAndFilter } from './components/SearchAndFilter'
-import { ExportImport } from './components/ExportImport'
-import { CategoryChart } from './components/analytics/CategoryChart'
-import { TrendsChart } from './components/analytics/TrendsChart'
-import { BudgetTracker } from './components/BudgetTracker'
-import { RecurringTransactions } from './components/RecurringTransactions'
-
-// AI Components
-import { AIFinancialAdvisor } from './components/ai/AIFinancialAdvisor'
-import { SmartCategorizer } from './components/ai/SmartCategorizer'
-import { BillScanner } from './components/scanning/BillScanner'
-
-// Hooks
-import { usePWA } from './hooks/usePWA'
-
-function App() {
-  const { 
-    tab, 
-    setTab, 
-    showAdd, 
-    setShowAdd, 
-    showAICategorizer, 
-    setShowAICategorizer,
-    showBillScanner,
-    setShowBillScanner,
-    editingTransaction,
-    setEditingTransaction,
-    processRecurringTransactions
-  } = useAppStore()
-
-  const { viewMode, setViewMode, isMobileView } = useViewMode()
-  const { isOnline } = usePWA()
-
-  // Loading states
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
-  const [showRefresh, setShowRefresh] = useState(false)
-  const loading = useLoading(isInitialLoad)
-
-  // Process recurring transactions on mount
   useEffect(() => {
-    processRecurringTransactions()
-  }, [processRecurringTransactions])
-
-  // Handle URL parameters for PWA shortcuts
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const action = urlParams.get('action')
-    const tabParam = urlParams.get('tab')
-
-    if (action === 'add') {
-      setShowAdd(true)
-    }
-
-    if (tabParam) {
-      const tabIndex = parseInt(tabParam)
-      if (!isNaN(tabIndex) && tabIndex >= 0 && tabIndex <= 6) {
-        setTab(tabIndex)
-      }
-    }
-  }, [setShowAdd, setTab])
-
-  // Handle initial loading - instant
-  useEffect(() => {
-    if (isInitialLoad) {
-      const timer = setTimeout(() => {
-        loading.completeLoading()
-        setTimeout(() => {
-          setIsInitialLoad(false)
-        }, 200)
-      }, 500)
-
-      return () => clearTimeout(timer)
-    }
-  }, [isInitialLoad, loading])
-
-  // Handle refresh scenario
-  const handleRefresh = () => {
-    setShowRefresh(true)
-    setTimeout(() => {
-      setShowRefresh(false)
-      window.location.reload()
-    }, 500)
-  }
-
-  // Show loading screen during initial load
-  if (isInitialLoad) {
-    return (
-      <LoadingScreen
-        isVisible={loading.isVisible}
-        progress={loading.progress}
-        message={loading.message}
-      />
-    )
-  }
-
-  // Show refresh scenario
-  if (showRefresh) {
-    return (
-      <RefreshScenario
-        isVisible={showRefresh}
-        onComplete={() => setShowRefresh(false)}
-      />
-    )
-  }
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setShowContent(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [setIsLoading]);
 
   const renderScreen = () => {
-    const screenProps = { isMobileView }
-
     switch (tab) {
-      case 0: // Home
-        return <HomeScreen {...screenProps} />
-      case 1: // Enhanced Insights
-        return <EnhancedInsightsScreen {...screenProps} />
-      case 2: // Calendar
-        return <CalendarScreen {...screenProps} />
-      case 3: // Transactions
-        return (
-          <div className="space-y-6">
-            <SearchAndFilter />
-            <ExportImport />
-            <TransactionList />
-          </div>
-        )
-      case 4: // Settings
-        return (
-          <div className="space-y-6">
-            <BudgetTracker />
-            <RecurringTransactions />
-          </div>
-        )
-      case 5: // AI Advisor
-        return <AIAdvisorScreen {...screenProps} />
-      case 6: // Goals
-        return <GoalsScreen {...screenProps} />
-      default:
-        return <HomeScreen {...screenProps} />
+      case 0: return <HomeScreen />;
+      case 1: return <InsightsScreen />;
+      case 2: return <CalendarScreen />;
+      case 3: return <TransactionsScreen />;
+      case 4: return <SettingsScreen />;
+      case 5: return <AIAdvisorScreen />;
+      case 6: return <GoalsScreen />;
+      default: return <HomeScreen />;
     }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-3xl bg-slate-800 flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Loader2 className="w-10 h-10 text-white animate-spin" />
+          </div>
+          <h2 className="text-slate-900 mb-2">FinTrack</h2>
+          <p className="text-slate-600">Loading your financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewMode === 'mobile') {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <TopBar onRefresh={() => window.location.reload()} />
+        <main className="max-w-md mx-auto px-4 pt-24 pb-32">
+          <div className={`transition-all duration-500 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {renderScreen()}
+          </div>
+        </main>
+        <BottomNavigation />
+        <TransactionModal />
+      </div>
+    );
   }
 
   return (
-    <ErrorBoundary>
-      <div className={`min-h-screen bg-slate-50 text-slate-900 ${isMobileView ? 'pb-20' : ''}`}>
-        {/* Desktop Navigation */}
-        {!isMobileView && <DesktopNav isMobileView={isMobileView} />}
-
-        {/* Main Content */}
-        <div className={`${!isMobileView ? 'ml-64' : ''} transition-all duration-300`}>
-          {/* Top Bar */}
-          <TopBar
-            title="FinTrack"
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            showViewToggle={!isMobileView}
-            onRefresh={handleRefresh}
-          />
-
-          {/* Screen Content */}
-          <div className={`${isMobileView ? 'px-4 pb-24' : 'px-6 pb-8'}`}>
+    <div className="min-h-screen bg-slate-50">
+      <TopBar onRefresh={() => window.location.reload()} />
+      <Sidebar />
+      <main className="ml-64 pt-20 px-8 pb-8">
+        <div className="max-w-7xl mx-auto">
+          <div className={`transition-all duration-500 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             {renderScreen()}
           </div>
         </div>
-
-        {/* Mobile Bottom Navigation */}
-        {isMobileView && <BottomNavigation isMobileView={isMobileView} />}
-
-        {/* Floating Action Button */}
-        <FloatingActionButton />
-
-        {/* Modals - Only render when needed */}
-        {showAdd && (
-          <AddTransactionModal 
-            onClose={() => {
-              setShowAdd(false)
-              setEditingTransaction(null)
-            }}
-            editingTransaction={editingTransaction}
-          />
-        )}
-
-        {/* AI Components */}
-        {showAICategorizer && (
-          <SmartCategorizer onClose={() => setShowAICategorizer(false)} />
-        )}
-
-        {showBillScanner && (
-          <BillScanner onClose={() => setShowBillScanner(false)} />
-        )}
-
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* PWA Components */}
-        <PWAInstallPrompt />
-        <UpdatePrompt />
-        <OfflineIndicator />
-
-        {/* Toast Notifications */}
-        <Toaster position="top-right" />
-      </div>
-    </ErrorBoundary>
-  )
+      </main>
+      <TransactionModal />
+    </div>
+  );
 }
-
-export default App

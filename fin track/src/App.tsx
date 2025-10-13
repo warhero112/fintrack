@@ -2,7 +2,8 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { 
   Home, TrendingUp, Calendar, List, Settings, Bot, Target,
   Sparkles, RefreshCw, Monitor, Smartphone, Plus, X, DollarSign,
-  Pencil, Trash2, Wallet, ArrowUpRight, ArrowDownRight, Loader2
+  Pencil, Trash2, Wallet, ArrowUpRight, ArrowDownRight, Loader2,
+  PieChart, BarChart3, Activity, AlertCircle, Send, Bell, Download
 } from 'lucide-react';
 
 // Context for global state
@@ -15,6 +16,14 @@ function AppProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState('mobile');
   const [transactions, setTransactions] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [settings, setSettings] = useState({
+    currency: 'USD',
+    theme: 'light',
+    notifications: true,
+    budgetAlerts: true
+  });
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -23,6 +32,9 @@ function AppProvider({ children }) {
       try {
         const data = JSON.parse(saved);
         setTransactions(data.transactions || []);
+        setGoals(data.goals || []);
+        setBudgets(data.budgets || []);
+        setSettings(data.settings || settings);
       } catch (e) {
         console.error('Failed to load data');
       }
@@ -35,15 +47,23 @@ function AppProvider({ children }) {
         { id: '4', description: 'Freelance Project', amount: 1200, type: 'income', category: 'Freelance', date: '2025-10-10' },
         { id: '5', description: 'Restaurant Dinner', amount: 65, type: 'expense', category: 'Dining', date: '2025-10-11' }
       ]);
+      setGoals([
+        { id: '1', name: 'Emergency Fund', targetAmount: 10000, currentAmount: 6500, deadline: '2025-12-31', category: 'Savings', color: 'blue' },
+        { id: '2', name: 'Vacation to Europe', targetAmount: 5000, currentAmount: 2300, deadline: '2026-06-30', category: 'Travel', color: 'purple' }
+      ]);
+      setBudgets([
+        { id: '1', category: 'Food', limit: 500, spent: 150, period: 'monthly' },
+        { id: '2', category: 'Utilities', limit: 200, spent: 80, period: 'monthly' },
+        { id: '3', category: 'Dining', limit: 300, spent: 65, period: 'monthly' }
+      ]);
     }
   }, []);
 
-  // Save to localStorage whenever transactions change
+  // Save to localStorage whenever data changes
   useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem('fintrack-data', JSON.stringify({ transactions }));
-    }
-  }, [transactions]);
+    const data = { transactions, goals, budgets, settings };
+    localStorage.setItem('fintrack-data', JSON.stringify(data));
+  }, [transactions, goals, budgets, settings]);
 
   const addTransaction = (transaction) => {
     const newTransaction = { ...transaction, id: Date.now().toString() };
@@ -64,6 +84,74 @@ function AppProvider({ children }) {
     return { income, expenses, balance: income - expenses };
   };
 
+  const getMonthlyTotals = (year, month) => {
+    const monthTransactions = transactions.filter(t => {
+      const date = new Date(t.date);
+      return date.getFullYear() === year && date.getMonth() === month;
+    });
+    const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expenses = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    return { income, expenses, balance: income - expenses };
+  };
+
+  const getCategoryTotals = () => {
+    const expenseTransactions = transactions.filter(t => t.type === 'expense');
+    const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const categoryMap = new Map();
+    
+    expenseTransactions.forEach(t => {
+      const current = categoryMap.get(t.category) || 0;
+      categoryMap.set(t.category, current + t.amount);
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([category, amount]) => ({ 
+        category, 
+        amount, 
+        percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0 
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  };
+
+  // Goals functions
+  const addGoal = (goal) => {
+    const newGoal = { ...goal, id: Date.now().toString() };
+    setGoals([...goals, newGoal]);
+  };
+
+  const updateGoal = (id, updates) => {
+    setGoals(goals.map(g => g.id === id ? { ...g, ...updates } : g));
+  };
+
+  const deleteGoal = (id) => {
+    setGoals(goals.filter(g => g.id !== id));
+  };
+
+  // Budget functions
+  const addBudget = (budget) => {
+    const newBudget = { ...budget, id: Date.now().toString(), spent: 0 };
+    setBudgets([...budgets, newBudget]);
+  };
+
+  const updateBudget = (id, updates) => {
+    setBudgets(budgets.map(b => b.id === id ? { ...b, ...updates } : b));
+  };
+
+  const deleteBudget = (id) => {
+    setBudgets(budgets.filter(b => b.id !== id));
+  };
+
+  // Update budget spent amounts based on transactions
+  useEffect(() => {
+    const updatedBudgets = budgets.map(budget => {
+      const spent = transactions
+        .filter(t => t.type === 'expense' && t.category === budget.category)
+        .reduce((sum, t) => sum + t.amount, 0);
+      return { ...budget, spent };
+    });
+    setBudgets(updatedBudgets);
+  }, [transactions]);
+
   const value = {
     tab, setTab,
     showAdd, setShowAdd,
@@ -71,10 +159,21 @@ function AppProvider({ children }) {
     isLoading, setIsLoading,
     viewMode, setViewMode,
     transactions,
+    goals,
+    budgets,
+    settings,
     addTransaction,
     updateTransaction,
     deleteTransaction,
-    getTotals
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    addBudget,
+    updateBudget,
+    deleteBudget,
+    getTotals,
+    getMonthlyTotals,
+    getCategoryTotals
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -312,8 +411,14 @@ function TransactionModal() {
 }
 
 function HomeScreen() {
-  const { setShowAdd, getTotals, transactions, setEditingTransaction, deleteTransaction } = useAppStore();
+  const { 
+    setShowAdd, getTotals, transactions, setEditingTransaction, deleteTransaction,
+    getMonthlyTotals, getCategoryTotals, budgets, goals
+  } = useAppStore();
   const totals = getTotals();
+  const currentDate = new Date();
+  const monthlyTotals = getMonthlyTotals(currentDate.getFullYear(), currentDate.getMonth());
+  const categoryTotals = getCategoryTotals();
   const [hoveredId, setHoveredId] = useState(null);
 
   const formatCurrency = (amount) => `$${amount.toLocaleString()}`;
@@ -444,6 +549,123 @@ function HomeScreen() {
         </div>
       </div>
 
+      {/* Category Spending Chart */}
+      <div className="rounded-2xl bg-white p-8 border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+            <PieChart className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">Category Spending</h3>
+        </div>
+        <div className="space-y-3">
+          {categoryTotals.slice(0, 5).map((cat, index) => (
+            <div key={index} className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-900">{cat.category}</span>
+                <span className="text-slate-600">{formatCurrency(cat.amount)}</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-slate-700 transition-all duration-500" 
+                  style={{ width: `${cat.percentage}%` }} 
+                />
+              </div>
+            </div>
+          ))}
+          {categoryTotals.length === 0 && (
+            <p className="text-slate-500 text-center py-8">No spending data yet</p>
+          )}
+        </div>
+      </div>
+
+      {/* Monthly Overview */}
+      <div className="rounded-2xl bg-white p-8 border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">This Month</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+            <div>
+              <p className="text-emerald-700 text-sm">Income</p>
+              <p className="text-emerald-900 text-lg font-bold">{formatCurrency(monthlyTotals.income)}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center">
+              <ArrowUpRight className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-50 border border-rose-200">
+            <div>
+              <p className="text-rose-700 text-sm">Expenses</p>
+              <p className="text-rose-900 text-lg font-bold">{formatCurrency(monthlyTotals.expenses)}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-rose-600 flex items-center justify-center">
+              <ArrowDownRight className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-100 border border-slate-200">
+            <div>
+              <p className="text-slate-700 text-sm">Net</p>
+              <p className="text-slate-900 text-lg font-bold">{formatCurrency(monthlyTotals.balance)}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Budget Overview */}
+      {budgets.length > 0 && (
+        <div className="rounded-2xl bg-white p-8 border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Budget Overview</h3>
+          </div>
+          <div className="space-y-4">
+            {budgets.map((budget) => {
+              const percentage = (budget.spent / budget.limit) * 100;
+              const isOverBudget = percentage >= 100;
+              return (
+                <div key={budget.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-900">{budget.category}</span>
+                      {isOverBudget && <AlertCircle className="w-4 h-4 text-rose-500" />}
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-slate-900">{formatCurrency(budget.spent)}</span>
+                      <span className="text-slate-500"> / {formatCurrency(budget.limit)}</span>
+                    </div>
+                  </div>
+                  <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        isOverBudget ? 'bg-rose-500' : 'bg-emerald-500'
+                      }`}
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={isOverBudget ? 'text-rose-600' : 'text-slate-500'}>
+                      {percentage.toFixed(0)}% used
+                    </span>
+                    <span className={isOverBudget ? 'text-rose-600' : 'text-emerald-600'}>
+                      {isOverBudget ? 'Over by ' : ''}{formatCurrency(Math.abs(budget.limit - budget.spent))} {isOverBudget ? '' : 'left'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions */}
       <div className="rounded-2xl bg-white p-8 border border-slate-200 shadow-sm">
         <h3 className="text-xl font-bold text-slate-900 mb-6">Quick Actions</h3>
         <div className="grid grid-cols-2 gap-4">
@@ -463,6 +685,156 @@ function HomeScreen() {
               <Target className="w-6 h-6 text-white" />
             </div>
             <p className="text-slate-900 font-medium text-sm">View Goals</p>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// AI Advisor Screen
+function AIAdvisorScreen() {
+  const { getTotals, transactions, goals, budgets } = useAppStore();
+  const [messages, setMessages] = useState([
+    { id: '1', text: "Hello! I'm your AI Financial Advisor. I can help you understand your spending patterns, set financial goals, and provide personalized advice. How can I assist you today?", sender: 'ai', timestamp: new Date() }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const generateAIResponse = (userMessage) => {
+    const totals = getTotals();
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('spending') || lowerMessage.includes('expenses')) {
+      const categoryTotals = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => {
+          acc[t.category] = (acc[t.category] || 0) + t.amount;
+          return acc;
+        }, {});
+      const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+      return `Based on your transaction history, you've spent $${totals.expenses.toLocaleString()} in total. Your largest expense category is ${topCategory?.[0] || 'N/A'} at $${topCategory?.[1]?.toLocaleString() || 0}. Consider reviewing this category for potential savings.`;
+    }
+    
+    if (lowerMessage.includes('budget')) {
+      const overBudget = budgets.filter(b => b.spent > b.limit);
+      if (overBudget.length > 0) {
+        return `You're currently over budget in ${overBudget.length} ${overBudget.length === 1 ? 'category' : 'categories'}: ${overBudget.map(b => b.category).join(', ')}. I recommend reviewing these expenses and adjusting your spending habits.`;
+      }
+      return `Great news! You're staying within your budget limits across all categories. Keep up the good work!`;
+    }
+    
+    if (lowerMessage.includes('goal')) {
+      if (goals.length === 0) {
+        return `You haven't set any financial goals yet. Setting clear, measurable goals is a great way to stay motivated and track your progress. Would you like help setting up your first goal?`;
+      }
+      const goalProgress = goals.map(g => `${g.name}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% complete`).join(', ');
+      return `Here's your goal progress: ${goalProgress}. Keep up the momentum!`;
+    }
+    
+    return `That's a great question! Based on your financial data, I see you have ${transactions.length} transactions, with a net worth of $${totals.balance.toLocaleString()}. Is there anything specific you'd like to know about your finances?`;
+  };
+
+  const handleSend = (messageText) => {
+    const textToSend = messageText || input;
+    if (!textToSend.trim()) return;
+    
+    const userMessage = { id: Date.now().toString(), text: textToSend, sender: 'user', timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      const aiResponse = { id: (Date.now() + 1).toString(), text: generateAIResponse(textToSend), sender: 'ai', timestamp: new Date() };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const quickQuestions = [
+    "How's my spending this month?",
+    "Am I on track with my budget?",
+    "What are my biggest expenses?",
+    "How can I save more?",
+    "Review my financial goals"
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-3xl bg-slate-800 p-8 text-white shadow-2xl">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center shadow-lg">
+            <Bot className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white mb-1 text-2xl font-bold">AI Financial Advisor</h2>
+            <p className="text-slate-300">Powered by advanced AI</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white p-6 border border-slate-200 shadow-sm max-h-96 overflow-y-auto">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-2xl p-4 shadow-sm ${
+                message.sender === 'user' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-900'
+              }`}>
+                <p className="whitespace-pre-line">{message.text}</p>
+                <p className={`text-xs mt-2 ${message.sender === 'user' ? 'text-slate-300' : 'text-slate-500'}`}>
+                  {message.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          ))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-slate-100 rounded-2xl p-4">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-slate-600 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-slate-700 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-slate-700" />
+          <p className="text-slate-600 text-sm font-medium">Quick questions:</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {quickQuestions.map((question, index) => (
+            <button
+              key={index}
+              onClick={() => handleSend(question)}
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm hover:shadow-md hover:border-slate-300 transition-all duration-200 text-left font-medium"
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm">
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Ask me anything about your finances..."
+            className="flex-1 px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-200 outline-none transition-all"
+          />
+          <button
+            onClick={() => handleSend()}
+            disabled={!input.trim()}
+            className="px-6 py-4 rounded-2xl bg-slate-800 text-white hover:bg-slate-700 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-slate-800 shadow-lg"
+          >
+            <Send className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -502,11 +874,12 @@ function AppContent() {
       <main className="max-w-md mx-auto px-4 pt-24 pb-32">
         <div className={`transition-all duration-500 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {tab === 0 && <HomeScreen />}
-          {tab !== 0 && (
+          {tab === 5 && <AIAdvisorScreen />}
+          {tab !== 0 && tab !== 5 && (
             <div className="rounded-2xl bg-white p-12 border border-slate-200 text-center">
               <h3 className="text-slate-900 text-xl font-bold mb-2">
                 {tab === 1 && 'Insights'}{tab === 2 && 'Calendar'}{tab === 3 && 'Transactions'}
-                {tab === 4 && 'Settings'}{tab === 5 && 'AI Advisor'}{tab === 6 && 'Goals'}
+                {tab === 4 && 'Settings'}{tab === 6 && 'Goals'}
               </h3>
               <p className="text-slate-600">This screen is available in the full codebase</p>
             </div>
